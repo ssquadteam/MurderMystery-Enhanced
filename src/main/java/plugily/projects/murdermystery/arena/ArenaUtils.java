@@ -395,7 +395,8 @@ public class ArenaUtils extends PluginArenaUtils {
         .player(user.getPlayer())
         .arena(user.getArena())
         .integer(action.points)
-        .value(action.action);
+        .value(action.action)
+        .build();
 
     if (action.points < 0) {
       msg = msg.replace("+", "");
