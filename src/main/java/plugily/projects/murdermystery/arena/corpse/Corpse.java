@@ -1,47 +1,28 @@
-/*
- * MurderMystery - Find the murderer, kill him and survive!
- * Copyright (c) 2022  Plugily Projects - maintained by Tigerpanzer_02 and contributors
- *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- */
-
 package plugily.projects.murdermystery.arena.corpse;
 
-import org.golde.bukkit.corpsereborn.nms.Corpses;
-
-import plugily.projects.minigamesbox.classic.utils.hologram.ArmorStandHologram;
+import com.github.unldenis.corpse.corpse.Corpse;
+import eu.decentsoftware.holograms.api.holograms.Hologram;
 
 /**
  * @author Plajer
- * <p>
- * Created at 07.08.2018
+ *         <p>
+ *         Created at 07.08.2018
  */
 public class Corpse {
 
-  private final ArmorStandHologram hologram;
-  private final Corpses.CorpseData corpseData;
+  private final Hologram hologram;
+  private final com.github.unldenis.corpse.corpse.Corpse corpseData;
 
-  public Corpse(ArmorStandHologram hologram, Corpses.CorpseData corpseData) {
+  public Corpse(Hologram hologram, com.github.unldenis.corpse.corpse.Corpse corpseData) {
     this.hologram = hologram;
     this.corpseData = corpseData;
   }
 
-  public ArmorStandHologram getHologram() {
+  public Hologram getHologram() {
     return hologram;
   }
 
-  public Corpses.CorpseData getCorpseData() {
+  public com.github.unldenis.corpse.corpse.Corpse getCorpseData() {
     return corpseData;
   }
 }

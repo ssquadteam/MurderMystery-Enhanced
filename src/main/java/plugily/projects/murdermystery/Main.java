@@ -52,6 +52,8 @@ public class Main extends PluginMain {
   private HookManager hookManager;
   private CorpseHandler corpseHandler;
 
+  private plugily.projects.murdermystery.handlers.hologram.HologramManager hologramManager;
+
   @TestOnly
   public Main() {
     super();
@@ -69,16 +71,16 @@ public class Main extends PluginMain {
     new AdditionalValueInitializer(this);
     initializePluginClasses();
 
-    if(getConfigPreferences().getOption("HIDE_NAMETAGS")) {
-      getServer().getScheduler().scheduleSyncRepeatingTask(this, () ->
-        getServer().getOnlinePlayers().forEach(ArenaUtils::updateNameTagsVisibility), 60, 140);
+    if (getConfigPreferences().getOption("HIDE_NAMETAGS")) {
+      getServer().getScheduler().scheduleSyncRepeatingTask(this,
+          () -> getServer().getOnlinePlayers().forEach(ArenaUtils::updateNameTagsVisibility), 60, 140);
     }
 
     getDebugger().debug("Full {0} plugin enabled", getName());
     getDebugger()
-      .debug(
-        "[System] [Plugin] Initialization finished took {0}ms",
-        System.currentTimeMillis() - start);
+        .debug(
+            "[System] [Plugin] Initialization finished took {0}ms",
+            System.currentTimeMillis() - start);
   }
 
   public void initializePluginClasses() {
@@ -87,6 +89,7 @@ public class Main extends PluginMain {
     addFileName("skins");
     addFileName("special_blocks");
     addFileName("trails");
+    hologramManager = new plugily.projects.murdermystery.handlers.hologram.HologramManager(this);
     Arena.init(this);
     ArenaUtils.init(this);
     MurdererTimerManager.init(this);
@@ -112,15 +115,15 @@ public class Main extends PluginMain {
 
   private void addPluginMetrics() {
     getMetrics()
-      .addCustomChart(
-        new Metrics.SimplePie(
-          "hooked_addons",
-          () -> {
-            if(getServer().getPluginManager().getPlugin("MurderMystery-Extension") != null) {
-              return "Extension";
-            }
-            return "None";
-          }));
+        .addCustomChart(
+            new Metrics.SimplePie(
+                "hooked_addons",
+                () -> {
+                  if (getServer().getPluginManager().getPlugin("MurderMystery-Extension") != null) {
+                    return "Extension";
+                  }
+                  return "None";
+                }));
   }
 
   @Override
@@ -156,6 +159,10 @@ public class Main extends PluginMain {
 
   public CorpseHandler getCorpseHandler() {
     return corpseHandler;
+  }
+
+  public plugily.projects.murdermystery.handlers.hologram.HologramManager getNewHologramManager() {
+    return hologramManager;
   }
 
   @Override

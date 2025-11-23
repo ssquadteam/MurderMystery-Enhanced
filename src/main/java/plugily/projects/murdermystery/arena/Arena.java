@@ -49,8 +49,8 @@ import java.util.*;
 
 /**
  * @author Tigerpanzer_02
- * <p>
- * Created at 17.12.2021
+ *         <p>
+ *         Created at 17.12.2021
  */
 public class Arena extends PluginArena {
 
@@ -74,7 +74,7 @@ public class Arena extends PluginArena {
   private boolean goldVisuals = false;
   private final Map<CharacterType, Player> gameCharacters = new EnumMap<>(CharacterType.class);
   private final MapRestorerManager mapRestorerManager;
-  private ArmorStandHologram bowHologram;
+  private eu.decentsoftware.holograms.api.holograms.Hologram bowHologram;
 
   public Arena(String id) {
     super(id);
@@ -97,18 +97,16 @@ public class Arena extends PluginArena {
     return plugin;
   }
 
-
   @Override
   public PluginMapRestorerManager getMapRestorerManager() {
     return mapRestorerManager;
   }
 
-
   private void setPluginValues() {
   }
 
   public void addCorpse(Corpse corpse) {
-    if(plugin.getHookManager().isFeatureEnabled(HookManager.HookFeature.CORPSES)) {
+    if (plugin.getHookManager().isFeatureEnabled(HookManager.HookFeature.CORPSES)) {
       corpses.add(corpse);
     }
   }
@@ -174,16 +172,17 @@ public class Arena extends PluginArena {
   private BukkitTask visualTask;
 
   public void startGoldVisuals() {
-    if(visualTask != null) {
+    if (visualTask != null) {
       return;
     }
     visualTask = Bukkit.getScheduler().runTaskTimer(plugin, () -> {
-      if(!goldVisuals || !plugin.isEnabled() || goldSpawnPoints.isEmpty() || getArenaState() != IArenaState.WAITING_FOR_PLAYERS) {
-        //we need to cancel it that way as the arena class is an task
+      if (!goldVisuals || !plugin.isEnabled() || goldSpawnPoints.isEmpty()
+          || getArenaState() != IArenaState.WAITING_FOR_PLAYERS) {
+        // we need to cancel it that way as the arena class is an task
         visualTask.cancel();
         return;
       }
-      for(Location goldLocations : goldSpawnPoints) {
+      for (Location goldLocations : goldSpawnPoints) {
         Location goldLocation = goldLocations.clone();
         goldLocation.add(0, 0.4, 0);
         Bukkit.getOnlinePlayers().forEach(player -> VersionUtils.sendParticles("REDSTONE", player, goldLocation, 10));
@@ -197,30 +196,37 @@ public class Arena extends PluginArena {
 
   public void setGoldVisuals(boolean goldVisuals) {
     this.goldVisuals = goldVisuals;
-    if(goldVisuals) {
+    if (goldVisuals) {
       startGoldVisuals();
     }
   }
 
   public void loadSpecialBlock(SpecialBlock block) {
-    if(!specialBlocks.contains(block)) {
+    if (!specialBlocks.contains(block)) {
       specialBlocks.add(block);
     }
 
-    switch(block.getSpecialBlockType()) {
+    switch (block.getSpecialBlockType()) {
       case MYSTERY_CAULDRON:
-        block.setArmorStandHologram(new ArmorStandHologram(plugin.getBukkitHelper().getBlockCenter(block.getLocation()), new MessageBuilder(plugin.getLanguageManager().getLanguageMessage("In-Game.Messages.Arena.Playing.Special-Blocks.Cauldron.Hologram")).build()));
+        block
+            .setArmorStandHologram(plugin.getNewHologramManager()
+                .createHologram(plugin.getBukkitHelper().getBlockCenter(block.getLocation()),
+                    java.util.Collections.singletonList(new MessageBuilder(plugin.getLanguageManager()
+                        .getLanguageMessage("In-Game.Messages.Arena.Playing.Special-Blocks.Cauldron.Hologram"))
+                        .build())));
         break;
       case PRAISE_DEVELOPER:
-        ArmorStandHologram prayer = new ArmorStandHologram(plugin.getBukkitHelper().getBlockCenter(block.getLocation()));
-        for(String str : plugin.getLanguageManager().getLanguageMessage("In-Game.Messages.Arena.Playing.Special-Blocks.Pray.Hologram").split(";")) {
-          prayer.appendLine(new MessageBuilder(str).build());
+        java.util.List<String> lines = new java.util.ArrayList<>();
+        for (String str : plugin.getLanguageManager()
+            .getLanguageMessage("In-Game.Messages.Arena.Playing.Special-Blocks.Pray.Hologram").split(";")) {
+          lines.add(new MessageBuilder(str).build());
         }
-        block.setArmorStandHologram(prayer);
+        block.setArmorStandHologram(plugin.getNewHologramManager()
+            .createHologram(plugin.getBukkitHelper().getBlockCenter(block.getLocation()), lines));
         break;
       case HORSE_PURCHASE:
       case RAPID_TELEPORTATION:
-        //not yet implemented
+        // not yet implemented
       default:
         break;
     }
@@ -233,11 +239,11 @@ public class Arena extends PluginArena {
   public int getTotalRoleChances(Role role) {
     int totalRoleChances = 0;
 
-    for(Player p : getPlayersLeft()) {
+    for (Player p : getPlayersLeft()) {
       IUser user = getPlugin().getUserManager().getUser(p);
       totalRoleChances += getContributorValue(role, user);
     }
-    //avoid division / 0
+    // avoid division / 0
     return totalRoleChances == 0 ? 1 : totalRoleChances;
   }
 
@@ -268,8 +274,8 @@ public class Arena extends PluginArena {
 
   public int aliveDetective() {
     int alive = 0;
-    for(Player player : getPlayersLeft()) {
-      if(Role.isRole(Role.ANY_DETECTIVE, plugin.getUserManager().getUser(player), this) && isDetectiveAlive(player)) {
+    for (Player player : getPlayersLeft()) {
+      if (Role.isRole(Role.ANY_DETECTIVE, plugin.getUserManager().getUser(player), this) && isDetectiveAlive(player)) {
         alive++;
       }
     }
@@ -277,8 +283,8 @@ public class Arena extends PluginArena {
   }
 
   public boolean isDetectiveAlive(Player player) {
-    for(Player p : getPlayersLeft()) {
-      if(p == player && detectives.contains(p)) {
+    for (Player p : getPlayersLeft()) {
+      if (p == player && detectives.contains(p)) {
         return true;
       }
     }
@@ -297,15 +303,14 @@ public class Arena extends PluginArena {
     murderers.remove(player);
   }
 
-
   public boolean lastAliveMurderer() {
     return aliveMurderer() == 1;
   }
 
   public int aliveMurderer() {
     int alive = 0;
-    for(Player player : getPlayersLeft()) {
-      if(Role.isRole(Role.MURDERER, plugin.getUserManager().getUser(player), this) && isMurderAlive(player)) {
+    for (Player player : getPlayersLeft()) {
+      if (Role.isRole(Role.MURDERER, plugin.getUserManager().getUser(player), this) && isMurderAlive(player)) {
         alive++;
       }
     }
@@ -313,8 +318,8 @@ public class Arena extends PluginArena {
   }
 
   public boolean isMurderAlive(Player player) {
-    for(Player p : getPlayersLeft()) {
-      if(p == player && murderers.contains(p)) {
+    for (Player p : getPlayersLeft()) {
+      if (p == player && murderers.contains(p)) {
         return true;
       }
     }
@@ -325,8 +330,8 @@ public class Arena extends PluginArena {
     return murderers;
   }
 
-  public void setBowHologram(ArmorStandHologram bowHologram) {
-    if(bowHologram == null) {
+  public void setBowHologram(eu.decentsoftware.holograms.api.holograms.Hologram bowHologram) {
+    if (bowHologram == null) {
       this.bowHologram = null;
       return;
     }
@@ -334,7 +339,7 @@ public class Arena extends PluginArena {
     this.bowHologram = bowHologram;
   }
 
-  public ArmorStandHologram getBowHologram() {
+  public eu.decentsoftware.holograms.api.holograms.Hologram getBowHologram() {
     return bowHologram;
   }
 
@@ -382,7 +387,6 @@ public class Arena extends PluginArena {
     this.spawnGoldTimer = spawnGoldTimer;
   }
 
-
   public void setPlayerSpawnPoints(@NotNull List<Location> playerSpawnPoints) {
     this.playerSpawnPoints = playerSpawnPoints;
   }
@@ -403,17 +407,17 @@ public class Arena extends PluginArena {
   }
 
   public int getContributorValue(Role role, IUser user) {
-    if(role == Role.MURDERER && murdererContributions.containsKey(user)) {
+    if (role == Role.MURDERER && murdererContributions.containsKey(user)) {
       return murdererContributions.get(user);
-    } else if(detectiveContributions.containsKey(user)) {
+    } else if (detectiveContributions.containsKey(user)) {
       return detectiveContributions.get(user);
     }
     Player player = user.getPlayer();
     int contributor = user.getStatistic("CONTRIBUTION_" + role.name());
     int increase = plugin.getPermissionsManager().getPermissionCategoryValue(role.name() + "_BOOSTER", player);
     int multiplicator = plugin.getPermissionsManager().getPermissionCategoryValue("CHANCES_BOOSTER", player);
-    int calculatedContributor = (contributor + increase) * (multiplicator == 0 ? 1 :multiplicator);
-    if(role == Role.MURDERER) {
+    int calculatedContributor = (contributor + increase) * (multiplicator == 0 ? 1 : multiplicator);
+    if (role == Role.MURDERER) {
       murdererContributions.put(user, calculatedContributor);
     } else {
       detectiveContributions.put(user, calculatedContributor);

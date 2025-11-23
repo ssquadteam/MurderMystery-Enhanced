@@ -80,11 +80,23 @@
             <optional>true</optional>
         </dependency>
         <dependency>
-            <groupId>org.golde</groupId>
-            <artifactId>corpsereborn</artifactId>
-            <version>2.14.0</version>
+            <groupId>com.github.unldenis.corpse</groupId>
+            <artifactId>Corpse</artifactId>
+            <version>2.0.0</version>
             <scope>system</scope>
-            <systemPath>${project.basedir}/lib/CorpseReborn.jar</systemPath>
+            <systemPath>${project.basedir}/lib/Corpse.jar</systemPath>
+        </dependency>
+        <dependency>
+            <groupId>com.github.decentsoftware-eu</groupId>
+            <artifactId>decentholograms</artifactId>
+            <version>2.8.6</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>net.kyori</groupId>
+            <artifactId>adventure-text-minimessage</artifactId>
+            <version>4.17.0</version>
+            <scope>compile</scope>
         </dependency>
     </dependencies>
 

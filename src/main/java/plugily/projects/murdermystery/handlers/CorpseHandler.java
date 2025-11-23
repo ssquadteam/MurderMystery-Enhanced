@@ -19,127 +19,123 @@
 package plugily.projects.murdermystery.handlers;
 
 import org.bukkit.Bukkit;
-import org.bukkit.entity.ArmorStand;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
-import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.meta.SkullMeta;
-import org.bukkit.util.EulerAngle;
-import org.golde.bukkit.corpsereborn.CorpseAPI.CorpseAPI;
-import org.golde.bukkit.corpsereborn.CorpseAPI.events.CorpseClickEvent;
-import org.golde.bukkit.corpsereborn.CorpseAPI.events.CorpseSpawnEvent;
-import org.golde.bukkit.corpsereborn.nms.Corpses;
-
+import com.github.unldenis.corpse.api.CorpseAPI;
+import com.github.unldenis.corpse.event.AsyncCorpseInteractEvent;
+import eu.decentsoftware.holograms.api.holograms.Hologram;
+import plugily.projects.minigamesbox.api.arena.IArenaState;
 import plugily.projects.minigamesbox.classic.handlers.language.MessageBuilder;
-import plugily.projects.minigamesbox.classic.utils.hologram.ArmorStandHologram;
-import plugily.projects.minigamesbox.classic.utils.version.ServerVersion;
-import plugily.projects.minigamesbox.classic.utils.version.VersionUtils;
-import plugily.projects.minigamesbox.classic.utils.version.xseries.XMaterial;
 import plugily.projects.murdermystery.Main;
 import plugily.projects.murdermystery.api.events.game.MurderGameCorpseSpawnEvent;
 import plugily.projects.murdermystery.arena.Arena;
-import plugily.projects.murdermystery.HookManager;
 import plugily.projects.murdermystery.arena.corpse.Corpse;
-import plugily.projects.murdermystery.arena.corpse.Stand;
+import plugily.projects.murdermystery.arena.role.Role;
+import plugily.projects.murdermystery.handlers.hologram.HologramManager;
+import plugily.projects.murdermystery.HookManager;
 
 import java.util.HashMap;
-import java.util.Map;
 
 /**
  * @author Plajer
- * <p>
- * Created at 07.10.2018
+ *         <p>
+ *         Created at 03.02.2018
  */
 public class CorpseHandler implements Listener {
 
   private final Main plugin;
-  private Corpses.CorpseData lastSpawnedCorpse;
-
-  private final Map<String, String> registeredLastWords = new HashMap<>();
-  private final ItemStack head = XMaterial.PLAYER_HEAD.parseItem();
+  private final HashMap<Integer, Corpse> corpses;
+  private final HologramManager hologramManager;
+  private Corpse lastSpawnedCorpse;
 
   public CorpseHandler(Main plugin) {
     this.plugin = plugin;
-    //run bit later than hook manager to ensure it's not null
+    this.corpses = new HashMap<>();
+    this.hologramManager = plugin.getNewHologramManager();
+    // run bit later than hook manager to ensure it's not null
     Bukkit.getScheduler().runTaskLater(plugin, () -> {
-      if(plugin.getHookManager().isFeatureEnabled(HookManager.HookFeature.CORPSES)) {
+      if (plugin.getHookManager().isFeatureEnabled(HookManager.HookFeature.CORPSES)) {
         plugin.getServer().getPluginManager().registerEvents(this, plugin);
       }
     }, 20 * 7);
   }
 
-  public void registerLastWord(String permission, String lastWord) {
-    registeredLastWords.put(permission, lastWord);
-  }
-
-  @SuppressWarnings("deprecation")
   public void spawnCorpse(Player player, Arena arena) {
-    MurderGameCorpseSpawnEvent murderGameCorpseSpawnEvent = new MurderGameCorpseSpawnEvent(arena, player.getPlayer(), player.getLocation());
-    Bukkit.getPluginManager().callEvent(murderGameCorpseSpawnEvent);
-    if(murderGameCorpseSpawnEvent.isCancelled()) {
+    if (arena == null) {
       return;
     }
-    if(!plugin.getHookManager().isFeatureEnabled(HookManager.HookFeature.CORPSES)) {
-      ArmorStand stand = player.getLocation().getWorld().spawn(player.getLocation().add(0.0D, -1.25D, 0.0D), ArmorStand.class);
-      SkullMeta meta = (SkullMeta) head.getItemMeta();
-      meta = VersionUtils.setPlayerHead(player, meta);
-      head.setItemMeta(meta);
-
-      stand.setVisible(false);
-      if(ServerVersion.Version.isCurrentEqualOrHigher(ServerVersion.Version.v1_16)) {
-        stand.getEquipment().setHelmet(head);
-      } else {
-        stand.setHelmet(head);
-      }
-      stand.setGravity(false);
-      stand.setCustomNameVisible(false);
-      stand.setHeadPose(new EulerAngle(Math.toRadians(player.getLocation().getX()), Math.toRadians(player.getLocation().getPitch()), Math.toRadians(player.getLocation().getZ())));
-
-      plugin.getHologramManager().getArmorStands().add(stand);
-      ArmorStandHologram hologram = getLastWordsHologram(player);
-      arena.addHead(new Stand(hologram, stand));
-      Bukkit.getScheduler().runTaskLater(plugin, () -> {
-        hologram.delete();
-        plugin.getHologramManager().getArmorStands().remove(stand);
-        Bukkit.getScheduler().runTaskLater(plugin, stand::remove, 20 * 20);
-      }, 15 * 20);
-      return;
-    }
-    ArmorStandHologram hologram = getLastWordsHologram(player);
-    Corpses.CorpseData corpse = CorpseAPI.spawnCorpse(player, player.getLocation());
-    lastSpawnedCorpse = corpse;
-    //spawns 2 corpses - Corpses.CorpseData corpse = lastSpawnedCorpse = CorpseAPI.spawnCorpse(player, player.getLocation());
-    arena.addCorpse(new Corpse(hologram, corpse));
+    // we need to delay it as player is not yet dead/respawned
     Bukkit.getScheduler().runTaskLater(plugin, () -> {
-      hologram.delete();
-      Bukkit.getScheduler().runTaskLater(plugin, corpse::destroyCorpseFromEveryone, 20 * 20);
-    }, 15 * 20);
+      MurderGameCorpseSpawnEvent murderGameCorpseSpawnEvent = new MurderGameCorpseSpawnEvent(arena, player.getPlayer(),
+          player.getLocation());
+      Bukkit.getPluginManager().callEvent(murderGameCorpseSpawnEvent);
+      if (murderGameCorpseSpawnEvent.isCancelled()) {
+        return;
+      }
+
+      Hologram hologram = getLastWordsHologram(player);
+      com.github.unldenis.corpse.corpse.Corpse corpseData = CorpseAPI.getInstance().spawnCorpse(player,
+          player.getLocation());
+      Corpse corpse = new Corpse(hologram, corpseData);
+      lastSpawnedCorpse = corpse;
+      corpses.put(corpseData.getId(), corpse);
+      arena.addCorpse(corpse);
+    }, 2L);
   }
 
-  private ArmorStandHologram getLastWordsHologram(Player player) {
-    ArmorStandHologram hologram = new ArmorStandHologram(player.getLocation());
-    hologram.appendLine(new MessageBuilder(plugin.getLastWordsManager().getHologramTitle()).player(player).build());
-    hologram.appendLine(plugin.getLastWordsManager().getRandomLastWord(player));
-    return hologram;
+  public void removeCorpse(Corpse corpse) {
+    if (corpse.getHologram() != null) {
+      corpse.getHologram().delete();
+    }
+    CorpseAPI.getInstance().removeCorpse(corpse.getCorpseData());
+    corpses.remove(corpse.getCorpseData().getId());
+  }
+
+  public void removeCorpses(Arena arena) {
+    for (Corpse corpse : arena.getCorpses()) {
+      removeCorpse(corpse);
+    }
+    arena.getCorpses().clear();
+  }
+
+  private Hologram getLastWordsHologram(Player player) {
+    if (plugin.getLastWordsManager().hasLastWords(player)) {
+      return plugin.getNewHologramManager().createHologram(
+          player.getLocation().add(0, 1, 0),
+          java.util.Collections.singletonList(
+              new MessageBuilder(
+                  plugin.getLanguageManager().getLanguageMessage("In-Game.Messages.Arena.Playing.Last-Words.Hologram"))
+                  .value(plugin.getLastWordsManager().getLastWords(player))
+                  .build()));
+    }
+    return null;
   }
 
   @EventHandler
-  public void onCorpseSpawn(CorpseSpawnEvent e) {
-    if(lastSpawnedCorpse == null) {
-      return;
-    }
-    if(plugin.getConfigPreferences().getOption("CORPSES_INTEGRATION_OVERWRITE") && !lastSpawnedCorpse.equals(e.getCorpse())) {
-      e.setCancelled(true);
-    }
+  public void onCorpseInteract(AsyncCorpseInteractEvent e) {
+    Bukkit.getScheduler().runTask(plugin, () -> {
+      Player player = e.getPlayer();
+      if (!plugin.getArenaRegistry().isInArena(player)) {
+        return;
+      }
+      Arena arena = (Arena) plugin.getArenaRegistry().getArena(player);
+      if (arena.getArenaState() != IArenaState.IN_GAME) {
+        return;
+      }
+      if (arena.isSpectatorPlayer(player) || arena.isDeathPlayer(player)) {
+        return;
+      }
+      if (Role.isRole(Role.DETECTIVE, plugin.getUserManager().getUser(player), arena)) {
+        new MessageBuilder("IN_GAME_MESSAGES_ARENA_PLAYING_CORPSE_CLICK_DETECTIVE").asKey().player(player).arena(arena)
+            .sendPlayer();
+      } else if (Role.isRole(Role.MURDERER, plugin.getUserManager().getUser(player), arena)) {
+        new MessageBuilder("IN_GAME_MESSAGES_ARENA_PLAYING_CORPSE_CLICK_MURDERER").asKey().player(player).arena(arena)
+            .sendPlayer();
+      } else {
+        new MessageBuilder("IN_GAME_MESSAGES_ARENA_PLAYING_CORPSE_CLICK_INNOCENT").asKey().player(player).arena(arena)
+            .sendPlayer();
+      }
+    });
   }
-
-  @EventHandler
-  public void onCorpseClick(CorpseClickEvent e) {
-    if(plugin.getArenaRegistry().isInArena(e.getClicker())) {
-      e.setCancelled(true);
-      e.getClicker().closeInventory();
-    }
-  }
-
 }

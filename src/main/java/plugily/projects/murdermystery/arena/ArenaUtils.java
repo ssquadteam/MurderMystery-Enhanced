@@ -42,7 +42,8 @@ import plugily.projects.murdermystery.utils.ItemPosition;
 
 /**
  * @author Plajer
- * <p>Created at 13.03.2018
+ *         <p>
+ *         Created at 13.03.2018
  */
 public class ArenaUtils extends PluginArenaUtils {
 
@@ -51,56 +52,58 @@ public class ArenaUtils extends PluginArenaUtils {
   }
 
   public static void onMurdererDeath(Arena arena) {
-    for(Player player : arena.getPlayers()) {
-      VersionUtils.sendSubTitle(player, new MessageBuilder("IN_GAME_MESSAGES_GAME_END_PLACEHOLDERS_MURDERER_STOPPED").asKey().build(), 5, 40, 5);
+    for (Player player : arena.getPlayers()) {
+      VersionUtils.sendSubTitle(player,
+          new MessageBuilder("IN_GAME_MESSAGES_GAME_END_PLACEHOLDERS_MURDERER_STOPPED").asKey().build(), 5, 40, 5);
       IUser loopUser = getPlugin().getUserManager().getUser(player);
-      if(Role.isRole(Role.INNOCENT, loopUser, arena)) {
+      if (Role.isRole(Role.INNOCENT, loopUser, arena)) {
         addScore(loopUser, ScoreAction.SURVIVE_GAME, 0);
-      } else if(Role.isRole(Role.ANY_DETECTIVE, loopUser, arena)) {
+      } else if (Role.isRole(Role.ANY_DETECTIVE, loopUser, arena)) {
         addScore(loopUser, ScoreAction.WIN_GAME, 0);
         addScore(loopUser, ScoreAction.DETECTIVE_WIN_GAME, 0);
       }
     }
-    //we must call it ticks later due to instant respawn bug
+    // we must call it ticks later due to instant respawn bug
     Bukkit.getScheduler().runTask(getPlugin(), () -> getPlugin().getArenaManager().stopGame(false, arena));
   }
 
   public static void updateInnocentLocator(Arena arena) {
     java.util.List<Player> list = arena.getPlayersLeft();
 
-    if(!arena.isMurdererLocatorReceived()) {
+    if (!arena.isMurdererLocatorReceived()) {
       ItemStack innocentLocator = new ItemStack(Material.COMPASS, 1);
       ItemMeta innocentMeta = innocentLocator.getItemMeta();
       ComplementAccessor.getComplement()
-        .setDisplayName(
-          innocentMeta,
-          new MessageBuilder("IN_GAME_MESSAGES_ARENA_LOCATOR_INNOCENT").asKey().build());
+          .setDisplayName(
+              innocentMeta,
+              new MessageBuilder("IN_GAME_MESSAGES_ARENA_LOCATOR_INNOCENT").asKey().build());
       innocentLocator.setItemMeta(innocentMeta);
-      for(Player p : list) {
-        if(arena.isMurderAlive(p)) {
-          ItemPosition.setItem(getPlugin().getUserManager().getUser(p), ItemPosition.INNOCENTS_LOCATOR, innocentLocator);
+      for (Player p : list) {
+        if (arena.isMurderAlive(p)) {
+          ItemPosition.setItem(getPlugin().getUserManager().getUser(p), ItemPosition.INNOCENTS_LOCATOR,
+              innocentLocator);
         }
       }
       arena.setMurdererLocatorReceived(true);
 
-      for(Player p : list) {
-        if(Role.isRole(Role.MURDERER, getPlugin().getUserManager().getUser(p), arena)) {
+      for (Player p : list) {
+        if (Role.isRole(Role.MURDERER, getPlugin().getUserManager().getUser(p), arena)) {
           continue;
         }
         new TitleBuilder("IN_GAME_MESSAGES_ARENA_LOCATOR_WATCH_OUT")
-          .asKey()
-          .player(p)
-          .arena(arena)
-          .sendPlayer();
+            .asKey()
+            .player(p)
+            .arena(arena)
+            .sendPlayer();
       }
     }
 
-    for(Player p : list) {
-      if(Role.isRole(Role.MURDERER, getPlugin().getUserManager().getUser(p), arena)) {
+    for (Player p : list) {
+      if (Role.isRole(Role.MURDERER, getPlugin().getUserManager().getUser(p), arena)) {
         continue;
       }
-      for(Player murder : arena.getMurdererList()) {
-        if(arena.isMurderAlive(murder)) {
+      for (Player murder : arena.getMurdererList()) {
+        if (arena.isMurderAlive(murder)) {
           murder.setCompassTarget(p.getLocation());
         }
       }
@@ -109,35 +112,38 @@ public class ArenaUtils extends PluginArenaUtils {
   }
 
   public static void dropBowAndAnnounce(Arena arena, Player victim) {
-    if(arena.getBowHologram() != null) {
+    if (arena.getBowHologram() != null) {
       return;
     }
 
-    for(Player player : arena.getPlayers()) {
+    for (Player player : arena.getPlayers()) {
       IUser user = arena.getPlugin().getUserManager().getUser(player);
-      if(Role.isRole(Role.MURDERER, user, arena)) {
+      if (Role.isRole(Role.MURDERER, user, arena)) {
         continue;
       }
       new TitleBuilder("IN_GAME_MESSAGES_ARENA_PLAYING_BOW_DROPPED").asKey().arena(arena).send(player);
     }
 
-    ArmorStandHologram hologram =
-      new ArmorStandHologram(victim.getLocation()).appendItem(new ItemStack(Material.BOW, 1));
+    eu.decentsoftware.holograms.api.holograms.Hologram hologram = ((Main) arena.getPlugin()).getNewHologramManager()
+        .createHologram(victim.getLocation(), new ItemStack(Material.BOW, 1));
 
     arena.setBowHologram(hologram);
     addBowLocator(arena, hologram.getLocation());
   }
 
   /**
-   * Ensure that spectators and dead players can see each other while staying hidden from alive players.
-   * This selectively shows all spectators/dead players to each other after global hide logic runs.
+   * Ensure that spectators and dead players can see each other while staying
+   * hidden from alive players.
+   * This selectively shows all spectators/dead players to each other after global
+   * hide logic runs.
    */
   public static void showSpectatorsToEachOther(Arena arena) {
     if (arena == null) {
       return;
     }
 
-    // Collect all viewers that are either spectators or marked as dead within this arena
+    // Collect all viewers that are either spectators or marked as dead within this
+    // arena
     java.util.List<Player> spectatorViewers = new java.util.ArrayList<>();
     for (Player arenaPlayer : arena.getPlayers()) {
       if (arena.isSpectatorPlayer(arenaPlayer) || arena.isDeathPlayer(arenaPlayer)) {
@@ -176,7 +182,8 @@ public class ArenaUtils extends PluginArenaUtils {
    * Apply gray glow to spectators/dead for all spectator viewers in the arena.
    */
   public static void applySpectatorGlow(Arena arena) {
-    if (arena == null) return;
+    if (arena == null)
+      return;
 
     java.util.List<Player> targets = new java.util.ArrayList<>();
     for (Player p : arena.getPlayers()) {
@@ -184,11 +191,15 @@ public class ArenaUtils extends PluginArenaUtils {
         targets.add(p);
       }
     }
-    if (targets.isEmpty()) return;
+    if (targets.isEmpty())
+      return;
 
     // Enable glowing on targets (entity-side)
     for (Player target : targets) {
-      try { target.setGlowing(true); } catch (Throwable ignored) {}
+      try {
+        target.setGlowing(true);
+      } catch (Throwable ignored) {
+      }
     }
 
     // Per-viewer scoreboard team coloring for gray outline
@@ -199,19 +210,32 @@ public class ArenaUtils extends PluginArenaUtils {
       } catch (Throwable t) {
         continue;
       }
-      if (board == null) continue;
+      if (board == null)
+        continue;
 
       Team team = board.getTeam(SPECTATOR_TEAM_NAME);
       if (team == null) {
-        try { team = board.registerNewTeam(SPECTATOR_TEAM_NAME); } catch (IllegalArgumentException ignored) { team = board.getTeam(SPECTATOR_TEAM_NAME); }
+        try {
+          team = board.registerNewTeam(SPECTATOR_TEAM_NAME);
+        } catch (IllegalArgumentException ignored) {
+          team = board.getTeam(SPECTATOR_TEAM_NAME);
+        }
       }
-      if (team == null) continue;
-      try { team.setColor(ChatColor.GRAY); } catch (Throwable ignored) {}
+      if (team == null)
+        continue;
+      try {
+        team.setColor(ChatColor.GRAY);
+      } catch (Throwable ignored) {
+      }
       for (Player target : targets) {
-        if (viewer.equals(target)) continue;
+        if (viewer.equals(target))
+          continue;
         String entry = target.getName();
         if (!team.hasEntry(entry)) {
-          try { team.addEntry(entry); } catch (IllegalArgumentException ignored) {}
+          try {
+            team.addEntry(entry);
+          } catch (IllegalArgumentException ignored) {
+          }
         }
       }
     }
@@ -221,28 +245,43 @@ public class ArenaUtils extends PluginArenaUtils {
    * Clear spectator glow for a specific player across likely viewers.
    */
   public static void clearSpectatorGlowFor(Player player) {
-    if (player == null) return;
-    try { player.setGlowing(false); } catch (Throwable ignored) {}
+    if (player == null)
+      return;
+    try {
+      player.setGlowing(false);
+    } catch (Throwable ignored) {
+    }
     // Remove from spectator team on all online players' scoreboards to be safe
     for (Player online : Bukkit.getOnlinePlayers()) {
       Scoreboard board;
-      try { board = online.getScoreboard(); } catch (Throwable t) { continue; }
-      if (board == null) continue;
+      try {
+        board = online.getScoreboard();
+      } catch (Throwable t) {
+        continue;
+      }
+      if (board == null)
+        continue;
       Team team = board.getTeam(SPECTATOR_TEAM_NAME);
-      if (team == null) continue;
+      if (team == null)
+        continue;
       String entry = player.getName();
       if (team.hasEntry(entry)) {
-        try { team.removeEntry(entry); } catch (Throwable ignored) {}
+        try {
+          team.removeEntry(entry);
+        } catch (Throwable ignored) {
+        }
       }
     }
   }
 
   /**
-   * Apply scale of 0.5 to spectators/dead on supported servers (e.g., Paper 1.20.2+).
+   * Apply scale of 0.5 to spectators/dead on supported servers (e.g., Paper
+   * 1.20.2+).
    * Does nothing on unsupported versions.
    */
   public static void applySpectatorScale(Arena arena) {
-    if (arena == null) return;
+    if (arena == null)
+      return;
     java.util.List<Player> targets = new java.util.ArrayList<>();
     for (Player p : arena.getPlayers()) {
       if (arena.isSpectatorPlayer(p) || arena.isDeathPlayer(p)) {
@@ -258,7 +297,8 @@ public class ArenaUtils extends PluginArenaUtils {
    * Reset a player's scale to default (1.0) on supported servers.
    */
   public static void resetScaleFor(Player player) {
-    if (player == null) return;
+    if (player == null)
+      return;
     setEntityScaleIfSupported(player, 1.0f);
   }
 
@@ -280,12 +320,12 @@ public class ArenaUtils extends PluginArenaUtils {
     ItemStack bowLocator = new ItemStack(Material.COMPASS, 1);
     ItemMeta bowMeta = bowLocator.getItemMeta();
     ComplementAccessor.getComplement()
-      .setDisplayName(
-        bowMeta, new MessageBuilder("IN_GAME_MESSAGES_ARENA_LOCATOR_BOW").asKey().build());
+        .setDisplayName(
+            bowMeta, new MessageBuilder("IN_GAME_MESSAGES_ARENA_LOCATOR_BOW").asKey().build());
     bowLocator.setItemMeta(bowMeta);
-    for(Player p : arena.getPlayersLeft()) {
+    for (Player p : arena.getPlayersLeft()) {
       IUser user = getPlugin().getUserManager().getUser(p);
-      if(Role.isRole(Role.INNOCENT, user, arena)) {
+      if (Role.isRole(Role.INNOCENT, user, arena)) {
         ItemPosition.setItem(user, ItemPosition.BOW_LOCATOR, bowLocator);
         p.setCompassTarget(loc);
       }
@@ -293,42 +333,42 @@ public class ArenaUtils extends PluginArenaUtils {
   }
 
   public static void updateNameTagsVisibility(final Player p) {
-    if(!getPlugin().getConfigPreferences().getOption("HIDE_NAMETAGS")) {
+    if (!getPlugin().getConfigPreferences().getOption("HIDE_NAMETAGS")) {
       return;
     }
-    for(Player players : getPlugin().getServer().getOnlinePlayers()) {
+    for (Player players : getPlugin().getServer().getOnlinePlayers()) {
       IPluginArena arena = getPlugin().getArenaRegistry().getArena(players);
-      if(arena == null) {
+      if (arena == null) {
         continue;
       }
       VersionUtils.updateNameTagsVisibility(
-        p, players, "MMHide", arena.getArenaState() != IArenaState.IN_GAME);
+          p, players, "MMHide", arena.getArenaState() != IArenaState.IN_GAME);
     }
   }
 
   public static void addScore(IUser user, ScoreAction action, int amount) {
     XSound.matchXSound(XSound.ENTITY_EXPERIENCE_ORB_PICKUP.parseSound())
-      .play(user.getPlayer().getLocation(), 1F, 2F);
+        .play(user.getPlayer().getLocation(), 1F, 2F);
 
-    if(action == ScoreAction.GOLD_PICKUP && amount > 1) {
+    if (action == ScoreAction.GOLD_PICKUP && amount > 1) {
       int score = action.points * amount;
       new MessageBuilder("IN_GAME_MESSAGES_ARENA_PLAYING_SCORE_BONUS")
-        .asKey()
-        .player(user.getPlayer())
-        .arena(user.getArena())
-        .integer(score)
-        .value(action.action)
-        .sendPlayer();
+          .asKey()
+          .player(user.getPlayer())
+          .arena(user.getArena())
+          .integer(score)
+          .value(action.action)
+          .sendPlayer();
       user.adjustStatistic("LOCAL_SCORE", score);
       return;
     }
 
-    if(action == ScoreAction.DETECTIVE_WIN_GAME) {
+    if (action == ScoreAction.DETECTIVE_WIN_GAME) {
       int innocents = 0;
       Arena arena = (Arena) user.getArena();
 
-      for(Player p : arena.getPlayersLeft()) {
-        if(Role.isRole(Role.INNOCENT, getPlugin().getUserManager().getUser(p), arena)) {
+      for (Player p : arena.getPlayersLeft()) {
+        if (Role.isRole(Role.INNOCENT, getPlugin().getUserManager().getUser(p), arena)) {
           innocents++;
         }
       }
@@ -337,16 +377,15 @@ public class ArenaUtils extends PluginArenaUtils {
 
       user.adjustStatistic("LOCAL_SCORE", overallInnocents);
       new MessageBuilder("IN_GAME_MESSAGES_ARENA_PLAYING_SCORE_BONUS")
-        .asKey()
-        .player(user.getPlayer())
-        .arena(user.getArena())
-        .integer(overallInnocents)
-        .value(new MessageBuilder(action.action).integer(innocents).build())
-        .sendPlayer();
+          .asKey()
+          .player(user.getPlayer())
+          .arena(user.getArena())
+          .integer(overallInnocents)
+          .value(new MessageBuilder(action.action).integer(innocents).build())
+          .sendPlayer();
       return;
     }
-    String msg =
-      new MessageBuilder("IN_GAME_MESSAGES_ARENA_PLAYING_SCORE_BONUS")
+    String msg = new MessageBuilder("IN_GAME_MESSAGES_ARENA_PLAYING_SCORE_BONUS")
         .asKey()
         .player(user.getPlayer())
         .arena(user.getArena())
@@ -354,7 +393,7 @@ public class ArenaUtils extends PluginArenaUtils {
         .value(action.action)
         .build();
 
-    if(action.points < 0) {
+    if (action.points < 0) {
       msg = msg.replace("+", "");
     }
 
@@ -364,42 +403,42 @@ public class ArenaUtils extends PluginArenaUtils {
 
   public enum ScoreAction {
     KILL_PLAYER(
-      100,
-      new MessageBuilder("IN_GAME_MESSAGES_ARENA_PLAYING_SCORE_ACTION_KILL_PLAYER")
-        .asKey()
-        .build()),
+        100,
+        new MessageBuilder("IN_GAME_MESSAGES_ARENA_PLAYING_SCORE_ACTION_KILL_PLAYER")
+            .asKey()
+            .build()),
     KILL_MURDERER(
-      200,
-      new MessageBuilder("IN_GAME_MESSAGES_ARENA_PLAYING_SCORE_ACTION_KILL_MURDERER")
-        .asKey()
-        .build()),
+        200,
+        new MessageBuilder("IN_GAME_MESSAGES_ARENA_PLAYING_SCORE_ACTION_KILL_MURDERER")
+            .asKey()
+            .build()),
     GOLD_PICKUP(
-      15,
-      new MessageBuilder("IN_GAME_MESSAGES_ARENA_PLAYING_SCORE_ACTION_PICKUP_GOLD")
-        .asKey()
-        .build()),
+        15,
+        new MessageBuilder("IN_GAME_MESSAGES_ARENA_PLAYING_SCORE_ACTION_PICKUP_GOLD")
+            .asKey()
+            .build()),
     SURVIVE_TIME(
-      150,
-      new MessageBuilder("IN_GAME_MESSAGES_ARENA_PLAYING_SCORE_ACTION_SURVIVING_TIME")
-        .asKey()
-        .build()),
+        150,
+        new MessageBuilder("IN_GAME_MESSAGES_ARENA_PLAYING_SCORE_ACTION_SURVIVING_TIME")
+            .asKey()
+            .build()),
     SURVIVE_GAME(
-      200,
-      new MessageBuilder("IN_GAME_MESSAGES_ARENA_PLAYING_SCORE_ACTION_SURVIVING_END")
-        .asKey()
-        .build()),
+        200,
+        new MessageBuilder("IN_GAME_MESSAGES_ARENA_PLAYING_SCORE_ACTION_SURVIVING_END")
+            .asKey()
+            .build()),
     WIN_GAME(
-      100, new MessageBuilder("IN_GAME_MESSAGES_ARENA_PLAYING_SCORE_ACTION_WIN").asKey().build()),
+        100, new MessageBuilder("IN_GAME_MESSAGES_ARENA_PLAYING_SCORE_ACTION_WIN").asKey().build()),
     DETECTIVE_WIN_GAME(
-      0,
-      new MessageBuilder("IN_GAME_MESSAGES_ARENA_PLAYING_SCORE_ACTION_DETECTIVE")
-        .asKey()
-        .build()),
+        0,
+        new MessageBuilder("IN_GAME_MESSAGES_ARENA_PLAYING_SCORE_ACTION_DETECTIVE")
+            .asKey()
+            .build()),
     INNOCENT_KILL(
-      -100,
-      new MessageBuilder("IN_GAME_MESSAGES_ARENA_PLAYING_SCORE_ACTION_KILL_INNOCENT")
-        .asKey()
-        .build());
+        -100,
+        new MessageBuilder("IN_GAME_MESSAGES_ARENA_PLAYING_SCORE_ACTION_KILL_INNOCENT")
+            .asKey()
+            .build());
 
     int points;
     String action;
