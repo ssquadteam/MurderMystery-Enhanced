@@ -1,6 +1,5 @@
 package plugily.projects.murdermystery.arena.corpse;
 
-import com.github.unldenis.corpse.corpse.Corpse;
 import eu.decentsoftware.holograms.api.holograms.Hologram;
 
 /**

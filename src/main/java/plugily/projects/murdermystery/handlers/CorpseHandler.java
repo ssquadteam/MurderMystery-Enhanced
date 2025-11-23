@@ -106,7 +106,8 @@ public class CorpseHandler implements Listener {
           java.util.Collections.singletonList(
               new MessageBuilder(
                   plugin.getLanguageManager().getLanguageMessage("In-Game.Messages.Arena.Playing.Last-Words.Hologram"))
-                  .value(plugin.getLastWordsManager().getLastWords(player))
+                  .value(plugily.projects.murdermystery.utils.MessageUtil
+                      .parseToLegacy(plugin.getLastWordsManager().getLastWords(player)))
                   .build()));
     }
     return null;

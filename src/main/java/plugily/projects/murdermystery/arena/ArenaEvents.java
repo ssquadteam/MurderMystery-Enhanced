@@ -62,7 +62,8 @@ import plugily.projects.murdermystery.utils.ItemPosition;
 
 /**
  * @author Plajer
- * <p>Created at 13.03.2018
+ *         <p>
+ *         Created at 13.03.2018
  */
 public class ArenaEvents extends PluginArenaEvents {
 
@@ -91,20 +92,31 @@ public class ArenaEvents extends PluginArenaEvents {
       if (p.equals(murderer)) {
         // Murderer gets green title and optionally reinforced night vision
         VersionUtils.sendTitles(p, "§aYOU HAVE SABOTAGED ALL LIGHT SOURCES", null, 5, 40, 10);
-        try { XPotion.NIGHT_VISION.buildPotionEffect(20 * 35, 1).apply(p); } catch (Throwable ignored) {}
+        try {
+          XPotion.NIGHT_VISION.buildPotionEffect(20 * 35, 1).apply(p);
+        } catch (Throwable ignored) {
+        }
         continue;
       }
       VersionUtils.sendTitles(p, "§cLIGHTS HAVE BEEN SABOTAGED", null, 5, 40, 10);
       // Prefer server-supported Darkness (1.19+) else fall back to Blindness
       // Use Paper API for Darkness when available (1.19+); else Blindness
-      if (plugily.projects.minigamesbox.classic.utils.version.ServerVersion.Version.isCurrentEqualOrHigher(plugily.projects.minigamesbox.classic.utils.version.ServerVersion.Version.v1_19)) {
+      if (plugily.projects.minigamesbox.classic.utils.version.ServerVersion.Version
+          .isCurrentEqualOrHigher(plugily.projects.minigamesbox.classic.utils.version.ServerVersion.Version.v1_19)) {
         try {
-          p.addPotionEffect(new org.bukkit.potion.PotionEffect(org.bukkit.potion.PotionEffectType.DARKNESS, 20 * 30, 0, true, false, true));
+          p.addPotionEffect(new org.bukkit.potion.PotionEffect(org.bukkit.potion.PotionEffectType.DARKNESS, 20 * 30, 0,
+              true, false, true));
         } catch (Throwable ignored) {
-          try { XPotion.BLINDNESS.buildPotionEffect(20 * 30, 1).apply(p); } catch (Throwable ignored2) {}
+          try {
+            XPotion.BLINDNESS.buildPotionEffect(20 * 30, 1).apply(p);
+          } catch (Throwable ignored2) {
+          }
         }
       } else {
-        try { XPotion.BLINDNESS.buildPotionEffect(20 * 30, 1).apply(p); } catch (Throwable ignored) {}
+        try {
+          XPotion.BLINDNESS.buildPotionEffect(20 * 30, 1).apply(p);
+        } catch (Throwable ignored) {
+        }
       }
     }
 
@@ -123,41 +135,42 @@ public class ArenaEvents extends PluginArenaEvents {
   @Override
   public void handleIngameVoidDeath(Player victim, IPluginArena arena) {
     Arena pluginArena = plugin.getArenaRegistry().getArena(arena.getId());
-    if(pluginArena == null) {
+    if (pluginArena == null) {
       return;
     }
     victim.damage(1000.0);
-    if(arena.getArenaState() == IArenaState.IN_GAME) {
+    if (arena.getArenaState() == IArenaState.IN_GAME) {
       VersionUtils.teleport(victim, pluginArena.getPlayerSpawnPoints().get(0));
     }
   }
 
   @EventHandler
   public void onBowShot(EntityShootBowEvent event) {
-    if(event.getEntityType() != EntityType.PLAYER) {
+    if (event.getEntityType() != EntityType.PLAYER) {
       return;
     }
     Player player = (Player) event.getEntity();
     IUser user = plugin.getUserManager().getUser(player);
-    if(!Role.isRole(Role.ANY_DETECTIVE, user)) {
+    if (!Role.isRole(Role.ANY_DETECTIVE, user)) {
       return;
     }
-    if(user.getCooldown("bow_shot") > 0) {
+    if (user.getCooldown("bow_shot") > 0) {
       event.setCancelled(true);
       return;
     }
     int bowCooldown = plugin.getConfig().getInt("Bow.Cooldown", 5);
-    if(bowCooldown <= 0) {
+    if (bowCooldown <= 0) {
       return;
     }
     user.setCooldown("bow_shot", bowCooldown);
     plugin.getBukkitHelper().applyActionBarCooldown(player, bowCooldown);
-    VersionUtils.setMaterialCooldown(player, event.getBow().getType(), 20 * (plugin.getConfig().getInt("Bow.Cooldown", 5)));
+    VersionUtils.setMaterialCooldown(player, event.getBow().getType(),
+        20 * (plugin.getConfig().getInt("Bow.Cooldown", 5)));
   }
 
   @EventHandler
   public void onArrowPickup(PlugilyPlayerPickupArrow e) {
-    if(plugin.getArenaRegistry().isInArena(e.getPlayer())) {
+    if (plugin.getArenaRegistry().isInArena(e.getPlayer())) {
       e.getItem().remove();
       e.setCancelled(true);
     }
@@ -165,49 +178,51 @@ public class ArenaEvents extends PluginArenaEvents {
 
   @EventHandler
   public void onItemPickup(PlugilyEntityPickupItemEvent e) {
-    if(!(e.getEntity() instanceof Player)) {
+    if (!(e.getEntity() instanceof Player)) {
       return;
     }
     Player player = (Player) e.getEntity();
     Arena arena = plugin.getArenaRegistry().getArena(player);
-    if(arena == null) {
+    if (arena == null) {
       return;
     }
     IUser user = plugin.getUserManager().getUser(player);
     e.setCancelled(true);
-    if(arena.getBowHologram() != null
-      && e.getItem().equals(arena.getBowHologram().getEntityItem())) {
-      if(!user.isSpectator() && Role.isRole(Role.INNOCENT, user, arena)) {
+    if (arena.getBowHologram() != null
+        && e.getItem().getItemStack().getType() == Material.BOW
+        && e.getItem().getLocation().distance(arena.getBowHologram().getLocation()) < 2.0) {
+      if (!user.isSpectator() && Role.isRole(Role.INNOCENT, user, arena)) {
         XSound.BLOCK_LAVA_POP.play(player.getLocation(), 1F, 2F);
 
         ((MapRestorerManager) arena.getMapRestorerManager()).removeBowHolo();
         e.getItem().remove();
 
-        for(Player loopPlayer : arena.getPlayersLeft()) {
+        for (Player loopPlayer : arena.getPlayersLeft()) {
           IUser loopUser = plugin.getUserManager().getUser(loopPlayer);
-          if(Role.isRole(Role.INNOCENT, loopUser)) {
+          if (Role.isRole(Role.INNOCENT, loopUser)) {
             ItemPosition.setItem(loopUser, ItemPosition.BOW_LOCATOR, new ItemStack(Material.AIR, 1));
           }
         }
 
         arena.setCharacter(Arena.CharacterType.FAKE_DETECTIVE, player);
         ItemPosition.setItem(user, ItemPosition.BOW, new ItemStack(Material.BOW, 1));
-        ItemPosition.setItem(user, ItemPosition.INFINITE_ARROWS, new ItemStack(Material.ARROW, plugin.getConfig().getInt("Bow.Amount.Arrows.Fake", 3)));
+        ItemPosition.setItem(user, ItemPosition.INFINITE_ARROWS,
+            new ItemStack(Material.ARROW, plugin.getConfig().getInt("Bow.Amount.Arrows.Fake", 3)));
         new MessageBuilder("IN_GAME_MESSAGES_ARENA_PLAYING_BOW_PICKUP").asKey().player(player).arena(arena).sendArena();
       }
 
       return;
     }
 
-    if(e.getItem().getItemStack().getType() != Material.GOLD_INGOT) {
+    if (e.getItem().getItemStack().getType() != Material.GOLD_INGOT) {
       return;
     }
 
-    if(user.isSpectator() || arena.getArenaState() != IArenaState.IN_GAME) {
+    if (user.isSpectator() || arena.getArenaState() != IArenaState.IN_GAME) {
       return;
     }
 
-    if(PrayerRegistry.getBan().contains(player)) {
+    if (PrayerRegistry.getBan().contains(player)) {
       e.setCancelled(true);
       return;
     }
@@ -218,7 +233,7 @@ public class ArenaEvents extends PluginArenaEvents {
     arena.getGoldSpawned().remove(e.getItem());
 
     ItemStack stack = new ItemStack(Material.GOLD_INGOT, e.getItem().getItemStack().getAmount());
-    if(PrayerRegistry.getRush().contains(player)) {
+    if (PrayerRegistry.getRush().contains(player)) {
       stack.setAmount(3 * e.getItem().getItemStack().getAmount());
     }
 
@@ -229,92 +244,96 @@ public class ArenaEvents extends PluginArenaEvents {
     new MessageBuilder("IN_GAME_MESSAGES_ARENA_PLAYING_SCORE_GOLD").asKey().player(player).arena(arena).sendPlayer();
     plugin.getRewardsHandler().performReward(player, plugin.getRewardsHandler().getRewardType("GOLD_PICKUP"));
 
-    if(Role.isRole(Role.ANY_DETECTIVE, user, arena)) {
-      ItemPosition.addItem(user, ItemPosition.ARROWS, new ItemStack(Material.ARROW, e.getItem().getItemStack().getAmount() * plugin.getConfig().getInt("Bow.Amount.Arrows.Detective", 3)));
+    if (Role.isRole(Role.ANY_DETECTIVE, user, arena)) {
+      ItemPosition.addItem(user, ItemPosition.ARROWS, new ItemStack(Material.ARROW,
+          e.getItem().getItemStack().getAmount() * plugin.getConfig().getInt("Bow.Amount.Arrows.Detective", 3)));
       return;
     }
 
     // Grant bow on gold threshold only for non-murderers
-    if(!Role.isRole(Role.MURDERER, user, arena)
-      && user.getStatistic("LOCAL_GOLD") >= plugin.getConfig().getInt("Gold.Amount.Bow", 10)) {
+    if (!Role.isRole(Role.MURDERER, user, arena)
+        && user.getStatistic("LOCAL_GOLD") >= plugin.getConfig().getInt("Gold.Amount.Bow", 10)) {
       user.setStatistic("LOCAL_GOLD", 0);
       new TitleBuilder("IN_GAME_MESSAGES_ARENA_PLAYING_BOW_SHOT_TITLE")
-        .asKey()
-        .player(player)
-        .arena(arena)
-        .sendPlayer();
+          .asKey()
+          .player(player)
+          .arena(arena)
+          .sendPlayer();
       ItemPosition.setItem(user, ItemPosition.BOW, new ItemStack(Material.BOW, 1));
       ItemPosition.addItem(
-        user,
-        ItemPosition.ARROWS,
-        new ItemStack(Material.ARROW, plugin.getConfig().getInt("Bow.Amount.Arrows.Gold", 3)));
+          user,
+          ItemPosition.ARROWS,
+          new ItemStack(Material.ARROW, plugin.getConfig().getInt("Bow.Amount.Arrows.Gold", 3)));
       player
-        .getInventory()
-        .setItem(
-          /* same for all roles */ ItemPosition.GOLD_INGOTS.getOtherRolesItemPosition(),
-          null);
+          .getInventory()
+          .setItem(
+              /* same for all roles */ ItemPosition.GOLD_INGOTS.getOtherRolesItemPosition(),
+              null);
     }
     // If a murderer hits threshold, trigger Lights Sabotage event
-    if(Role.isRole(Role.MURDERER, user, arena)
-      && user.getStatistic("LOCAL_GOLD") >= plugin.getConfig().getInt("Gold.Amount.Bow", 10)
-      && plugily.projects.minigamesbox.classic.utils.version.ServerVersion.Version.isCurrentEqualOrHigher(plugily.projects.minigamesbox.classic.utils.version.ServerVersion.Version.v1_19)) {
+    if (Role.isRole(Role.MURDERER, user, arena)
+        && user.getStatistic("LOCAL_GOLD") >= plugin.getConfig().getInt("Gold.Amount.Bow", 10)
+        && plugily.projects.minigamesbox.classic.utils.version.ServerVersion.Version
+            .isCurrentEqualOrHigher(plugily.projects.minigamesbox.classic.utils.version.ServerVersion.Version.v1_19)) {
       // Do not reset their gold; they keep collecting
       triggerLightsSabotage(arena, player);
     }
   }
 
-
   @EventHandler
   public void onMurdererDamage(EntityDamageByEntityEvent e) {
-    if(!(e.getDamager() instanceof Player) || e.getEntityType() != EntityType.PLAYER) {
+    if (!(e.getDamager() instanceof Player) || e.getEntityType() != EntityType.PLAYER) {
       return;
     }
     Player attacker = (Player) e.getDamager();
     IUser userAttacker = plugin.getUserManager().getUser(attacker);
     Player victim = (Player) e.getEntity();
     IUser userVictim = plugin.getUserManager().getUser(victim);
-    if(!ArenaUtils.areInSameArena(attacker, victim)) {
+    if (!ArenaUtils.areInSameArena(attacker, victim)) {
       return;
     }
-    //we are killing player via damage() method so event can be cancelled safely, will work for detective damage murderer and others
+    // we are killing player via damage() method so event can be cancelled safely,
+    // will work for detective damage murderer and others
     e.setCancelled(true);
 
-    //better check this for future even if anyone else cannot use sword
-    if(!Role.isRole(Role.MURDERER, userAttacker)) {
+    // better check this for future even if anyone else cannot use sword
+    if (!Role.isRole(Role.MURDERER, userAttacker)) {
       return;
     }
 
-    //check if victim is murderer
-    if(Role.isRole(Role.MURDERER, userVictim)) {
+    // check if victim is murderer
+    if (Role.isRole(Role.MURDERER, userVictim)) {
       return;
     }
-    if(VersionUtils.getItemInHand(attacker) == null || plugin.getSwordSkinManager().getMurdererSword(attacker) == null) {
+    if (VersionUtils.getItemInHand(attacker) == null
+        || plugin.getSwordSkinManager().getMurdererSword(attacker) == null) {
       return;
     }
-    //just don't kill user if item isn't murderer sword
-    if(VersionUtils.getItemInHand(attacker).getType() != plugin.getSwordSkinManager().getMurdererSword(attacker).getType()) {
+    // just don't kill user if item isn't murderer sword
+    if (VersionUtils.getItemInHand(attacker).getType() != plugin.getSwordSkinManager().getMurdererSword(attacker)
+        .getType()) {
       return;
     }
 
     // prevent hits during global murderer cooldown
-    if(plugin.getUserManager().getUser(attacker).getCooldown("murderer_cooldown") > 0) {
+    if (plugin.getUserManager().getUser(attacker).getCooldown("murderer_cooldown") > 0) {
       int remain = (int) Math.ceil(plugin.getUserManager().getUser(attacker).getCooldown("murderer_cooldown"));
       attacker.sendMessage("§cYour sword is on cooldown (" + remain + "s)");
       return;
     }
 
-    //check if sword has cooldown
-    if(ServerVersion.Version.isCurrentLower(ServerVersion.Version.v1_11)) {
-      if(plugin.getUserManager().getUser(attacker).getCooldown("sword_attack") > 0) {
+    // check if sword has cooldown
+    if (ServerVersion.Version.isCurrentLower(ServerVersion.Version.v1_11)) {
+      if (plugin.getUserManager().getUser(attacker).getCooldown("sword_attack") > 0) {
         return;
       }
-    } else if(attacker.hasCooldown(plugin.getSwordSkinManager().getMurdererSword(attacker).getType())) {
+    } else if (attacker.hasCooldown(plugin.getSwordSkinManager().getMurdererSword(attacker).getType())) {
       return;
     }
 
-    if(Role.isRole(Role.MURDERER, userVictim)) {
+    if (Role.isRole(Role.MURDERER, userVictim)) {
       plugin.getRewardsHandler().performReward(attacker, plugin.getRewardsHandler().getRewardType("KILL_MURDERER"));
-    } else if(Role.isRole(Role.ANY_DETECTIVE, userVictim)) {
+    } else if (Role.isRole(Role.ANY_DETECTIVE, userVictim)) {
       plugin.getRewardsHandler().performReward(attacker, plugin.getRewardsHandler().getRewardType("KILL_DETECTIVE"));
     }
 
@@ -328,10 +347,10 @@ public class ArenaEvents extends PluginArenaEvents {
     ArenaUtils.addScore(user, ArenaUtils.ScoreAction.KILL_PLAYER, 0);
 
     Arena arena = plugin.getArenaRegistry().getArena(attacker);
-    if(Role.isRole(Role.ANY_DETECTIVE, userVictim) && arena.lastAliveDetective()) {
-      //if already true, no effect is done :)
+    if (Role.isRole(Role.ANY_DETECTIVE, userVictim) && arena.lastAliveDetective()) {
+      // if already true, no effect is done :)
       arena.setDetectiveDead(true);
-      if(Role.isRole(Role.FAKE_DETECTIVE, userVictim)) {
+      if (Role.isRole(Role.FAKE_DETECTIVE, userVictim)) {
         arena.setCharacter(Arena.CharacterType.FAKE_DETECTIVE, null);
       }
       ArenaUtils.dropBowAndAnnounce(arena, victim);
@@ -341,36 +360,35 @@ public class ArenaEvents extends PluginArenaEvents {
     MurdererTimerManager.startOrRefreshRampage(attacker);
   }
 
-
   @EventHandler
   public void onArrowDamage(EntityDamageByEntityEvent e) {
-    if(!(e.getDamager() instanceof Arrow)) {
+    if (!(e.getDamager() instanceof Arrow)) {
       return;
     }
-    if(!(((Arrow) e.getDamager()).getShooter() instanceof Player)) {
+    if (!(((Arrow) e.getDamager()).getShooter() instanceof Player)) {
       return;
     }
     Player attacker = (Player) ((Arrow) e.getDamager()).getShooter();
     IUser userAttacker = plugin.getUserManager().getUser(attacker);
-    if(plugin.getArenaRegistry().isInArena(attacker)) {
+    if (plugin.getArenaRegistry().isInArena(attacker)) {
       e.setCancelled(true);
       e.getDamager().remove();
     }
-    if(e.getEntityType() != EntityType.PLAYER) {
+    if (e.getEntityType() != EntityType.PLAYER) {
       return;
     }
     Player victim = (Player) e.getEntity();
     IUser userVictim = plugin.getUserManager().getUser(victim);
-    if(!ArenaUtils.areInSameArena(attacker, victim)) {
+    if (!ArenaUtils.areInSameArena(attacker, victim)) {
       return;
     }
-    //we won't allow to suicide
-    if(attacker.equals(victim)) {
+    // we won't allow to suicide
+    if (attacker.equals(victim)) {
       e.setCancelled(true);
       return;
     }
-    //dont kill murderer on bow damage if attacker is murderer
-    if(Role.isRole(Role.MURDERER, userAttacker) && Role.isRole(Role.MURDERER, userVictim)) {
+    // dont kill murderer on bow damage if attacker is murderer
+    if (Role.isRole(Role.MURDERER, userAttacker) && Role.isRole(Role.MURDERER, userVictim)) {
       e.setCancelled(true);
       return;
     }
@@ -378,16 +396,15 @@ public class ArenaEvents extends PluginArenaEvents {
     if (arena == null) {
       return;
     }
-    //we need to set it before the victim die, because of hero character
-    if(Role.isRole(Role.MURDERER, userVictim)) {
+    // we need to set it before the victim die, because of hero character
+    if (Role.isRole(Role.MURDERER, userVictim)) {
       arena.setCharacter(Arena.CharacterType.HERO, attacker);
     }
     XSound.ENTITY_PLAYER_DEATH.play(victim.getLocation());
     victim.damage(100.0);
 
-
     userAttacker.adjustStatistic("KILLS", 1);
-    if(Role.isRole(Role.MURDERER, userAttacker)) {
+    if (Role.isRole(Role.MURDERER, userAttacker)) {
       userAttacker.adjustStatistic("LOCAL_KILLS", 1);
       arena.adjustContributorValue(Role.DETECTIVE, userAttacker, plugin.getRandom().nextInt(2));
       ArenaUtils.addScore(userAttacker, ArenaUtils.ScoreAction.KILL_PLAYER, 0);
@@ -395,26 +412,31 @@ public class ArenaEvents extends PluginArenaEvents {
 
     VersionUtils.sendTitles(victim, new MessageBuilder("IN_GAME_DEATH_SCREEN").asKey().build(), null, 5, 40, 50);
 
-    if(Role.isRole(Role.MURDERER, userVictim)) {
+    if (Role.isRole(Role.MURDERER, userVictim)) {
       ArenaUtils.addScore(userAttacker, ArenaUtils.ScoreAction.KILL_MURDERER, 0);
       arena.adjustContributorValue(Role.MURDERER, userAttacker, plugin.getRandom().nextInt(2));
-    } else if(plugin.getConfigPreferences().getOption("BOW_KILL_DETECTIVE") && (Role.isRole(Role.ANY_DETECTIVE, userVictim) || Role.isRole(Role.INNOCENT, userVictim))) {
-      if(Role.isRole(Role.MURDERER, userAttacker)) {
-        VersionUtils.sendTitles(victim, null, new MessageBuilder("IN_GAME_MESSAGES_GAME_END_PLACEHOLDERS_MURDERER_KILLED_YOU").asKey().build(), 5, 40, 5);
+    } else if (plugin.getConfigPreferences().getOption("BOW_KILL_DETECTIVE")
+        && (Role.isRole(Role.ANY_DETECTIVE, userVictim) || Role.isRole(Role.INNOCENT, userVictim))) {
+      if (Role.isRole(Role.MURDERER, userAttacker)) {
+        VersionUtils.sendTitles(victim, null,
+            new MessageBuilder("IN_GAME_MESSAGES_GAME_END_PLACEHOLDERS_MURDERER_KILLED_YOU").asKey().build(), 5, 40, 5);
       } else {
-        VersionUtils.sendTitles(victim, null, new MessageBuilder("IN_GAME_MESSAGES_GAME_END_PLACEHOLDERS_INNOCENT_KILLED_YOU").asKey().build(), 5, 40, 5);
+        VersionUtils.sendTitles(victim, null,
+            new MessageBuilder("IN_GAME_MESSAGES_GAME_END_PLACEHOLDERS_INNOCENT_KILLED_YOU").asKey().build(), 5, 40, 5);
       }
 
-      //if else, murderer killed, so don't kill him :)
-      if(Role.isRole(Role.ANY_DETECTIVE, userAttacker) || Role.isRole(Role.INNOCENT, userAttacker)) {
-        VersionUtils.sendSubTitle(attacker, new MessageBuilder("IN_GAME_MESSAGES_GAME_END_PLACEHOLDERS_INNOCENT_KILLED_WRONGLY").asKey().build(), 5, 40, 5);
+      // if else, murderer killed, so don't kill him :)
+      if (Role.isRole(Role.ANY_DETECTIVE, userAttacker) || Role.isRole(Role.INNOCENT, userAttacker)) {
+        VersionUtils.sendSubTitle(attacker,
+            new MessageBuilder("IN_GAME_MESSAGES_GAME_END_PLACEHOLDERS_INNOCENT_KILLED_WRONGLY").asKey().build(), 5, 40,
+            5);
 
         attacker.damage(100.0);
         ArenaUtils.addScore(userAttacker, ArenaUtils.ScoreAction.INNOCENT_KILL, 0);
         plugin.getRewardsHandler().performReward(attacker, plugin.getRewardsHandler().getRewardType("KILL_DETECTIVE"));
-        if(Role.isRole(Role.ANY_DETECTIVE, userAttacker) && arena.lastAliveDetective()) {
+        if (Role.isRole(Role.ANY_DETECTIVE, userAttacker) && arena.lastAliveDetective()) {
           arena.setDetectiveDead(true);
-          if(Role.isRole(Role.FAKE_DETECTIVE, userAttacker)) {
+          if (Role.isRole(Role.FAKE_DETECTIVE, userAttacker)) {
             arena.setCharacter(Arena.CharacterType.FAKE_DETECTIVE, null);
           }
           ArenaUtils.dropBowAndAnnounce(arena, victim);
@@ -427,7 +449,7 @@ public class ArenaEvents extends PluginArenaEvents {
   public void onPlayerDie(PlayerDeathEvent e) {
     Player player = e.getEntity();
     Arena arena = plugin.getArenaRegistry().getArena(player);
-    if(arena == null) {
+    if (arena == null) {
       return;
     }
     IUser user = plugin.getUserManager().getUser(player);
@@ -436,21 +458,21 @@ public class ArenaEvents extends PluginArenaEvents {
     e.setDroppedExp(0);
     plugin.getCorpseHandler().spawnCorpse(player, arena);
     XPotion.BLINDNESS.buildPotionEffect(3 * 20, 1).apply(player);
-    if(arena.getArenaState() == IArenaState.STARTING) {
+    if (arena.getArenaState() == IArenaState.STARTING) {
       return;
-    } else if(arena.getArenaState() == IArenaState.ENDING || arena.getArenaState() == IArenaState.RESTARTING) {
+    } else if (arena.getArenaState() == IArenaState.ENDING || arena.getArenaState() == IArenaState.RESTARTING) {
       player.getInventory().clear();
       player.setFlying(false);
       player.setAllowFlight(false);
       user.setStatistic("LOCAL_GOLD", 0);
       return;
     }
-    if(Role.isRole(Role.MURDERER, user, arena) && arena.lastAliveMurderer()) {
+    if (Role.isRole(Role.MURDERER, user, arena) && arena.lastAliveMurderer()) {
       ArenaUtils.onMurdererDeath(arena);
     }
-    if(Role.isRole(Role.ANY_DETECTIVE, user) && arena.lastAliveDetective()) {
+    if (Role.isRole(Role.ANY_DETECTIVE, user) && arena.lastAliveDetective()) {
       arena.setDetectiveDead(true);
-      if(Role.isRole(Role.FAKE_DETECTIVE, user)) {
+      if (Role.isRole(Role.FAKE_DETECTIVE, user)) {
         arena.setCharacter(Arena.CharacterType.FAKE_DETECTIVE, null);
       }
       ArenaUtils.dropBowAndAnnounce(arena, player);
@@ -470,14 +492,14 @@ public class ArenaEvents extends PluginArenaEvents {
     player.setAllowFlight(true);
     player.setFlying(true);
     player.getInventory().clear();
-    if(plugin.getConfigPreferences().getOption("HIDE_DEATH")) {
+    if (plugin.getConfigPreferences().getOption("HIDE_DEATH")) {
       new MessageBuilder(MessageBuilder.ActionType.DEATH).player(player).arena(arena).sendArena();
     }
 
-    if(arena.getArenaState() != IArenaState.ENDING && arena.getArenaState() != IArenaState.RESTARTING) {
+    if (arena.getArenaState() != IArenaState.ENDING && arena.getArenaState() != IArenaState.RESTARTING) {
       arena.addDeathPlayer(player);
     }
-    //we must call it ticks later due to instant respawn bug
+    // we must call it ticks later due to instant respawn bug
     Bukkit.getScheduler().runTaskLater(plugin, () -> {
       player.spigot().respawn();
       plugin.getSpecialItemManager().addSpecialItemsOfStage(player, SpecialItem.DisplayStage.SPECTATOR);
@@ -488,22 +510,22 @@ public class ArenaEvents extends PluginArenaEvents {
   public void onRespawn(PlayerRespawnEvent event) {
     Player player = event.getPlayer();
     Arena arena = plugin.getArenaRegistry().getArena(player);
-    if(arena == null) {
+    if (arena == null) {
       return;
     }
-    if(arena.getArenaState() == IArenaState.STARTING || arena.getArenaState() == IArenaState.WAITING_FOR_PLAYERS) {
+    if (arena.getArenaState() == IArenaState.STARTING || arena.getArenaState() == IArenaState.WAITING_FOR_PLAYERS) {
       event.setRespawnLocation(arena.getLobbyLocation());
       return;
     }
-    if(arena.getArenaState() == IArenaState.RESTARTING) {
+    if (arena.getArenaState() == IArenaState.RESTARTING) {
       event.setRespawnLocation(arena.getEndLocation());
       return;
     }
-    if(arena.getPlayers().contains(player)) {
+    if (arena.getPlayers().contains(player)) {
       IUser user = plugin.getUserManager().getUser(player);
       org.bukkit.Location firstSpawn = arena.getPlayerSpawnPoints().get(0);
 
-      if(player.getLocation().getWorld().equals(firstSpawn.getWorld())) {
+      if (player.getLocation().getWorld().equals(firstSpawn.getWorld())) {
         event.setRespawnLocation(player.getLocation());
       } else {
         event.setRespawnLocation(firstSpawn);
@@ -526,39 +548,43 @@ public class ArenaEvents extends PluginArenaEvents {
     }
   }
 
-
   @EventHandler
   public void locatorDistanceUpdate(PlayerMoveEvent event) {
     Player player = event.getPlayer();
     Arena arena = plugin.getArenaRegistry().getArena(player);
-    if(arena == null) {
+    if (arena == null) {
       return;
     }
     IUser user = plugin.getUserManager().getUser(player);
-    //skip spectators
-    if(user.isSpectator()) {
+    // skip spectators
+    if (user.isSpectator()) {
       return;
     }
-    if(arena.getArenaState() == IArenaState.IN_GAME) {
-      if(Role.isRole(Role.INNOCENT, user, arena)) {
-        if(player.getInventory().getItem(ItemPosition.BOW_LOCATOR.getOtherRolesItemPosition()) != null) {
+    if (arena.getArenaState() == IArenaState.IN_GAME) {
+      if (Role.isRole(Role.INNOCENT, user, arena)) {
+        if (player.getInventory().getItem(ItemPosition.BOW_LOCATOR.getOtherRolesItemPosition()) != null) {
           ItemStack bowLocator = new ItemStack(Material.COMPASS, 1);
           ItemMeta bowMeta = bowLocator.getItemMeta();
-          ComplementAccessor.getComplement().setDisplayName(bowMeta, new MessageBuilder("IN_GAME_MESSAGES_ARENA_LOCATOR_BOW").asKey().player(player).arena(arena).build() + " §7| §a" + (int) Math.round(player.getLocation().distance(player.getCompassTarget())));
+          ComplementAccessor.getComplement().setDisplayName(bowMeta,
+              new MessageBuilder("IN_GAME_MESSAGES_ARENA_LOCATOR_BOW").asKey().player(player).arena(arena).build()
+                  + " §7| §a" + (int) Math.round(player.getLocation().distance(player.getCompassTarget())));
           bowLocator.setItemMeta(bowMeta);
           ItemPosition.setItem(user, ItemPosition.BOW_LOCATOR, bowLocator);
           return;
         }
       }
-      if(arena.isMurdererLocatorReceived() && Role.isRole(Role.MURDERER, user, arena) && arena.isMurderAlive(player)) {
+      if (arena.isMurdererLocatorReceived() && Role.isRole(Role.MURDERER, user, arena) && arena.isMurderAlive(player)) {
         ItemStack innocentLocator = new ItemStack(Material.COMPASS, 1);
         ItemMeta innocentMeta = innocentLocator.getItemMeta();
-        for(Player p : arena.getPlayersLeft()) {
+        for (Player p : arena.getPlayersLeft()) {
           Arena playerArena = plugin.getArenaRegistry().getArena(p);
           IUser playerUser = plugin.getUserManager().getUser(p);
 
-          if(Role.isRole(Role.INNOCENT, playerUser, playerArena) || Role.isRole(Role.ANY_DETECTIVE, playerUser, playerArena)) {
-            ComplementAccessor.getComplement().setDisplayName(innocentMeta, new MessageBuilder("IN_GAME_MESSAGES_ARENA_LOCATOR_INNOCENT").asKey().player(player).arena(arena).build() + " §7| §a" + (int) Math.round(player.getLocation().distance(p.getLocation())));
+          if (Role.isRole(Role.INNOCENT, playerUser, playerArena)
+              || Role.isRole(Role.ANY_DETECTIVE, playerUser, playerArena)) {
+            ComplementAccessor.getComplement().setDisplayName(innocentMeta,
+                new MessageBuilder("IN_GAME_MESSAGES_ARENA_LOCATOR_INNOCENT").asKey().player(player).arena(arena)
+                    .build() + " §7| §a" + (int) Math.round(player.getLocation().distance(p.getLocation())));
             innocentLocator.setItemMeta(innocentMeta);
             ItemPosition.setItem(user, ItemPosition.INNOCENTS_LOCATOR, innocentLocator);
           }
@@ -569,15 +595,18 @@ public class ArenaEvents extends PluginArenaEvents {
 
   @EventHandler
   public void onDrop(PlayerDropItemEvent event) {
-    if(plugin.getArenaRegistry().getArena(event.getPlayer()) != null && plugin.getArenaRegistry().getArena(event.getPlayer()).getArenaState() == IArenaState.IN_GAME) {
+    if (plugin.getArenaRegistry().getArena(event.getPlayer()) != null
+        && plugin.getArenaRegistry().getArena(event.getPlayer()).getArenaState() == IArenaState.IN_GAME) {
       event.setCancelled(true);
     }
   }
 
   @EventHandler
   public void onItemMove(InventoryClickEvent event) {
-    if(event.getWhoClicked() instanceof Player && plugin.getArenaRegistry().isInArena((Player) event.getWhoClicked())) {
-      if(XInventoryView.of(event.getView()).getType() == InventoryType.CRAFTING || XInventoryView.of(event.getView()).getType() == InventoryType.PLAYER) {
+    if (event.getWhoClicked() instanceof Player
+        && plugin.getArenaRegistry().isInArena((Player) event.getWhoClicked())) {
+      if (XInventoryView.of(event.getView()).getType() == InventoryType.CRAFTING
+          || XInventoryView.of(event.getView()).getType() == InventoryType.PLAYER) {
         event.setResult(Event.Result.DENY);
       }
     }

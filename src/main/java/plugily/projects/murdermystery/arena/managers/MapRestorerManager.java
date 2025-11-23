@@ -18,9 +18,8 @@
 
 package plugily.projects.murdermystery.arena.managers;
 
-import org.bukkit.Bukkit;
 import org.bukkit.entity.Item;
-import org.golde.bukkit.corpsereborn.CorpseAPI.CorpseAPI;
+import com.github.unldenis.corpse.api.CorpseAPI;
 import plugily.projects.minigamesbox.classic.arena.managers.PluginMapRestorerManager;
 import plugily.projects.murdermystery.HookManager;
 import plugily.projects.murdermystery.arena.Arena;
@@ -44,7 +43,6 @@ public class MapRestorerManager extends PluginMapRestorerManager {
     super.fullyRestoreArena();
   }
 
-
   public void cleanUpArena() {
     removeBowHolo();
     arena.setMurdererLocatorReceived(false);
@@ -60,7 +58,7 @@ public class MapRestorerManager extends PluginMapRestorerManager {
   }
 
   public void removeBowHolo() {
-    if(arena.getBowHologram() != null && !arena.getBowHologram().isDeleted()) {
+    if (arena.getBowHologram() != null) {
       arena.getBowHologram().delete();
     }
     arena.setBowHologram(null);
@@ -72,25 +70,24 @@ public class MapRestorerManager extends PluginMapRestorerManager {
   }
 
   public void clearCorpses() {
-    if(!arena.getPlugin().getHookManager().isFeatureEnabled(HookManager.HookFeature.CORPSES)) {
-      for(Stand stand : arena.getStands()) {
-        if(!stand.getHologram().isDeleted()) {
+    if (!arena.getPlugin().getHookManager().isFeatureEnabled(HookManager.HookFeature.CORPSES)) {
+      for (Stand stand : arena.getStands()) {
+        if (stand.getHologram() != null) {
           stand.getHologram().delete();
         }
-        if(stand.getStand() != null) {
+        if (stand.getStand() != null) {
           stand.getStand().remove();
         }
       }
       arena.getStands().clear();
       return;
     }
-    for(Corpse corpse : arena.getCorpses()) {
-      if(!corpse.getHologram().isDeleted()) {
+    for (Corpse corpse : arena.getCorpses()) {
+      if (corpse.getHologram() != null) {
         corpse.getHologram().delete();
       }
-      if(corpse.getCorpseData() != null) {
-        corpse.getCorpseData().destroyCorpseFromEveryone();
-        CorpseAPI.removeCorpse(corpse.getCorpseData());
+      if (corpse.getCorpseData() != null) {
+        CorpseAPI.getInstance().removeCorpse(corpse.getCorpseData());
       }
     }
     arena.getCorpses().clear();

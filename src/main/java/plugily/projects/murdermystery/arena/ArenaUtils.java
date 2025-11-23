@@ -33,10 +33,10 @@ import plugily.projects.minigamesbox.api.user.IUser;
 import plugily.projects.minigamesbox.classic.arena.PluginArenaUtils;
 import plugily.projects.minigamesbox.classic.handlers.language.MessageBuilder;
 import plugily.projects.minigamesbox.classic.handlers.language.TitleBuilder;
-import plugily.projects.minigamesbox.classic.utils.hologram.ArmorStandHologram;
 import plugily.projects.minigamesbox.classic.utils.misc.complement.ComplementAccessor;
 import plugily.projects.minigamesbox.classic.utils.version.VersionUtils;
 import plugily.projects.minigamesbox.classic.utils.version.xseries.XSound;
+import plugily.projects.murdermystery.Main;
 import plugily.projects.murdermystery.arena.role.Role;
 import plugily.projects.murdermystery.utils.ItemPosition;
 
@@ -124,8 +124,13 @@ public class ArenaUtils extends PluginArenaUtils {
       new TitleBuilder("IN_GAME_MESSAGES_ARENA_PLAYING_BOW_DROPPED").asKey().arena(arena).send(player);
     }
 
+    // Spawn real item for pickup
+    org.bukkit.entity.Item bowItem = victim.getWorld().dropItem(victim.getLocation(), new ItemStack(Material.BOW, 1));
+    bowItem.setPickupDelay(0); // Allow immediate pickup if needed, or default
+
+    // Create hologram for visual
     eu.decentsoftware.holograms.api.holograms.Hologram hologram = ((Main) arena.getPlugin()).getNewHologramManager()
-        .createHologram(victim.getLocation(), new ItemStack(Material.BOW, 1));
+        .createHologram(victim.getLocation().add(0, 1, 0), new ItemStack(Material.BOW, 1));
 
     arena.setBowHologram(hologram);
     addBowLocator(arena, hologram.getLocation());

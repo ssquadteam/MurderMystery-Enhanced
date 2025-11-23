@@ -31,8 +31,8 @@ import java.util.stream.Collectors;
 
 /**
  * @author 2Wild4You, Tigerpanzer_02
- * <p>
- * Created at 19.02.2021
+ *         <p>
+ *         Created at 19.02.2021
  */
 public class LastWordsManager {
 
@@ -49,8 +49,9 @@ public class LastWordsManager {
     hologramTitle = config.getString("Last-Words.Hologram.Title", "-");
     ConfigurationSection section = config.getConfigurationSection("Last-Words.Hologram.Content");
     String path = "Last-Words.Hologram.Content.";
-    for(String id : section.getKeys(false)) {
-      addLastWord(new LastWord(new MessageBuilder(config.getString(path + id + ".Message")).build(), config.getString(path + id + ".Permission", "")));
+    for (String id : section.getKeys(false)) {
+      addLastWord(new LastWord(new MessageBuilder(config.getString(path + id + ".Message")).build(),
+          config.getString(path + id + ".Permission", "")));
     }
   }
 
@@ -67,17 +68,27 @@ public class LastWordsManager {
   }
 
   public String getRandomLastWord(Player player) {
-    //check perms
-    List<LastWord> perms = registeredLastWords.stream().filter(lastWord -> player.hasPermission(lastWord.getPermission())).collect(Collectors.toList());
-    if(!perms.isEmpty()) {
+    // check perms
+    List<LastWord> perms = registeredLastWords.stream()
+        .filter(lastWord -> player.hasPermission(lastWord.getPermission())).collect(Collectors.toList());
+    if (!perms.isEmpty()) {
       return perms.get(ThreadLocalRandom.current().nextInt(perms.size())).getMessage();
     }
-    //check default
-    List<LastWord> noPerms = registeredLastWords.stream().filter(lastWord -> !lastWord.hasPermission()).collect(Collectors.toList());
-    if(!noPerms.isEmpty()) {
+    // check default
+    List<LastWord> noPerms = registeredLastWords.stream().filter(lastWord -> !lastWord.hasPermission())
+        .collect(Collectors.toList());
+    if (!noPerms.isEmpty()) {
       return noPerms.get(ThreadLocalRandom.current().nextInt(noPerms.size())).getMessage();
     }
-    //fallback
+    // fallback
     return registeredLastWords.get(0).getMessage();
+  }
+
+  public boolean hasLastWords(Player player) {
+    return !registeredLastWords.isEmpty();
+  }
+
+  public String getLastWords(Player player) {
+    return getRandomLastWord(player);
   }
 }
