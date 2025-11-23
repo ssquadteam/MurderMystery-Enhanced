@@ -124,7 +124,7 @@ public class InGameState extends PluginInGameState {
             continue;
 
           p.getInventory().setHeldItemSlot(0);
-          ItemPosition.setItem(murderer, ItemPosition.MURDERER_SWORD, pluginArena.getPlugin().getSwordSkinManager().getRandomSwordSkin(p));
+          ItemPosition.setItem(murderer, ItemPosition.MURDERER_SWORD, pluginArena.getPlugin().getSwordSkinManager().getPlayerSelectedSwordSkin(p));
         }
       }
     }

@@ -176,6 +176,12 @@ public class ArenaManager extends PluginArenaManager {
             if (murderWon || !hasMurdererRole) {
               user.adjustStatistic("WINS", 1);
               plugin.getRewardsHandler().performReward(player, plugin.getRewardsHandler().getRewardType("WIN"));
+
+              if(hasMurdererRole && murderWon) {
+                user.adjustStatistic("MURDERER_WINS", 1);
+              } else if(hasDetectiveRole && !murderWon) {
+                user.adjustStatistic("DETECTIVE_WINS", 1);
+              }
             } else {
               user.adjustStatistic("LOSES", 1);
               plugin.getRewardsHandler().performReward(player, plugin.getRewardsHandler().getRewardType("LOSE"));

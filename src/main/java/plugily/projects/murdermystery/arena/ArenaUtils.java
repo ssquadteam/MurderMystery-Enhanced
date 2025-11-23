@@ -395,15 +395,13 @@ public class ArenaUtils extends PluginArenaUtils {
         .player(user.getPlayer())
         .arena(user.getArena())
         .integer(action.points)
-        .value(action.action)
-        .build();
+        .value(action.action);
 
     if (action.points < 0) {
       msg = msg.replace("+", "");
     }
 
     user.adjustStatistic("LOCAL_SCORE", action.points);
-    user.getPlayer().sendMessage(msg);
   }
 
   public enum ScoreAction {
