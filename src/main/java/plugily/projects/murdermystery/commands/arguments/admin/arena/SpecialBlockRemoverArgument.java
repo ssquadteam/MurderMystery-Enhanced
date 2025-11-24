@@ -34,7 +34,7 @@ import plugily.projects.minigamesbox.classic.utils.version.xseries.XMaterial;
 import plugily.projects.murdermystery.arena.Arena;
 import plugily.projects.murdermystery.arena.special.SpecialBlock;
 import plugily.projects.murdermystery.commands.arguments.ArgumentsRegistry;
-import eu.decentsoftware.holograms.api.holograms.Hologram;
+import plugily.projects.murdermystery.handlers.hologram.Hologram;
 
 import java.util.ArrayList;
 import java.util.List;

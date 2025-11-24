@@ -30,7 +30,6 @@ import plugily.projects.minigamesbox.api.user.IUser;
 import plugily.projects.minigamesbox.classic.arena.PluginArena;
 import plugily.projects.minigamesbox.classic.arena.managers.PluginMapRestorerManager;
 import plugily.projects.minigamesbox.classic.handlers.language.MessageBuilder;
-import plugily.projects.minigamesbox.classic.utils.hologram.ArmorStandHologram;
 import plugily.projects.minigamesbox.classic.utils.version.VersionUtils;
 import plugily.projects.murdermystery.HookManager;
 import plugily.projects.murdermystery.Main;
@@ -74,7 +73,7 @@ public class Arena extends PluginArena {
   private boolean goldVisuals = false;
   private final Map<CharacterType, Player> gameCharacters = new EnumMap<>(CharacterType.class);
   private final MapRestorerManager mapRestorerManager;
-  private eu.decentsoftware.holograms.api.holograms.Hologram bowHologram;
+  private plugily.projects.murdermystery.handlers.hologram.Hologram bowHologram;
 
   public Arena(String id) {
     super(id);
@@ -330,7 +329,7 @@ public class Arena extends PluginArena {
     return murderers;
   }
 
-  public void setBowHologram(eu.decentsoftware.holograms.api.holograms.Hologram bowHologram) {
+  public void setBowHologram(plugily.projects.murdermystery.handlers.hologram.Hologram bowHologram) {
     if (bowHologram == null) {
       this.bowHologram = null;
       return;
@@ -339,7 +338,7 @@ public class Arena extends PluginArena {
     this.bowHologram = bowHologram;
   }
 
-  public eu.decentsoftware.holograms.api.holograms.Hologram getBowHologram() {
+  public plugily.projects.murdermystery.handlers.hologram.Hologram getBowHologram() {
     return bowHologram;
   }
 

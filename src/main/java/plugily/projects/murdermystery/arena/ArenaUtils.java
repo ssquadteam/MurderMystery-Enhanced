@@ -129,10 +129,15 @@ public class ArenaUtils extends PluginArenaUtils {
     bowItem.setPickupDelay(0); // Allow immediate pickup if needed, or default
 
     // Create hologram for visual
-    eu.decentsoftware.holograms.api.holograms.Hologram hologram = ((Main) arena.getPlugin()).getNewHologramManager()
+    plugily.projects.murdermystery.handlers.hologram.Hologram hologram = ((Main) arena.getPlugin())
+        .getNewHologramManager()
         .createHologram(victim.getLocation().add(0, 1, 0), new ItemStack(Material.BOW, 1));
 
     arena.setBowHologram(hologram);
+    // Spawn for all players
+    for (Player p : arena.getPlayers()) {
+      hologram.spawn(p);
+    }
     addBowLocator(arena, hologram.getLocation());
   }
 

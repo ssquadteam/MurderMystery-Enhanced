@@ -24,7 +24,7 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import com.github.unldenis.corpse.api.CorpseAPI;
 import com.github.unldenis.corpse.event.AsyncCorpseInteractEvent;
-import eu.decentsoftware.holograms.api.holograms.Hologram;
+import plugily.projects.murdermystery.handlers.hologram.Hologram;
 import plugily.projects.minigamesbox.api.arena.IArenaState;
 import plugily.projects.minigamesbox.classic.handlers.language.MessageBuilder;
 import plugily.projects.murdermystery.Main;
@@ -46,13 +46,10 @@ public class CorpseHandler implements Listener {
 
   private final Main plugin;
   private final HashMap<Integer, Corpse> corpses;
-  private final HologramManager hologramManager;
-  private Corpse lastSpawnedCorpse;
 
   public CorpseHandler(Main plugin) {
     this.plugin = plugin;
     this.corpses = new HashMap<>();
-    this.hologramManager = plugin.getNewHologramManager();
     // run bit later than hook manager to ensure it's not null
     Bukkit.getScheduler().runTaskLater(plugin, () -> {
       if (plugin.getHookManager().isFeatureEnabled(HookManager.HookFeature.CORPSES)) {
@@ -78,15 +75,22 @@ public class CorpseHandler implements Listener {
       com.github.unldenis.corpse.corpse.Corpse corpseData = CorpseAPI.getInstance().spawnCorpse(player,
           player.getLocation());
       Corpse corpse = new Corpse(hologram, corpseData);
-      lastSpawnedCorpse = corpse;
+
       corpses.put(corpseData.getId(), corpse);
       arena.addCorpse(corpse);
+
+      // Spawn hologram for all players in arena
+      if (hologram != null) {
+        for (Player p : arena.getPlayers()) {
+          hologram.spawn(p);
+        }
+      }
     }, 2L);
   }
 
   public void removeCorpse(Corpse corpse) {
     if (corpse.getHologram() != null) {
-      corpse.getHologram().delete();
+      plugin.getNewHologramManager().deleteHologram(corpse.getHologram());
     }
     CorpseAPI.getInstance().removeCorpse(corpse.getCorpseData());
     corpses.remove(corpse.getCorpseData().getId());

@@ -1,7 +1,7 @@
 package plugily.projects.murdermystery.arena.special;
 
 import org.bukkit.Location;
-import eu.decentsoftware.holograms.api.holograms.Hologram;
+import plugily.projects.murdermystery.handlers.hologram.Hologram;
 
 /**
  * @author Plajer

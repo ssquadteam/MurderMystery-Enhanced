@@ -1,6 +1,6 @@
 package plugily.projects.murdermystery.arena.corpse;
 
-import eu.decentsoftware.holograms.api.holograms.Hologram;
+import plugily.projects.murdermystery.handlers.hologram.Hologram;
 
 /**
  * @author Plajer
