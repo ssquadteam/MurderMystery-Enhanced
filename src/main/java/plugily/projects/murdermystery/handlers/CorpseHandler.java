@@ -1,41 +1,20 @@
-/*
- * MurderMystery - Find the murderer, kill him and survive!
- * Copyright (c) 2022  Plugily Projects - maintained by Tigerpanzer_02 and contributors
- *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- */
-
 package plugily.projects.murdermystery.handlers;
 
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
-import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
-import com.github.unldenis.corpse.api.CorpseAPI;
-import com.github.unldenis.corpse.event.AsyncCorpseInteractEvent;
 import plugily.projects.murdermystery.handlers.hologram.Hologram;
-import plugily.projects.minigamesbox.api.arena.IArenaState;
 import plugily.projects.minigamesbox.classic.handlers.language.MessageBuilder;
 import plugily.projects.murdermystery.Main;
 import plugily.projects.murdermystery.api.events.game.MurderGameCorpseSpawnEvent;
 import plugily.projects.murdermystery.arena.Arena;
 import plugily.projects.murdermystery.arena.corpse.Corpse;
-import plugily.projects.murdermystery.arena.role.Role;
 import plugily.projects.murdermystery.handlers.hologram.HologramManager;
 import plugily.projects.murdermystery.HookManager;
 
 import java.util.HashMap;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * @author Plajer
@@ -72,16 +51,14 @@ public class CorpseHandler implements Listener {
       }
 
       Hologram hologram = getLastWordsHologram(player);
-      com.github.unldenis.corpse.corpse.Corpse corpseData = CorpseAPI.getInstance().spawnCorpse(player,
-          player.getLocation());
-      Corpse corpse = new Corpse(hologram, corpseData);
+      Corpse corpse = new Corpse(hologram, player, player.getLocation());
 
-      corpses.put(corpseData.getId(), corpse);
+      corpses.put(corpse.getId(), corpse);
       arena.addCorpse(corpse);
 
-      // Spawn hologram for all players in arena
-      if (hologram != null) {
-        for (Player p : arena.getPlayers()) {
+      for (Player p : arena.getPlayers()) {
+        corpse.spawn(p);
+        if (hologram != null) {
           hologram.spawn(p);
         }
       }
@@ -92,8 +69,10 @@ public class CorpseHandler implements Listener {
     if (corpse.getHologram() != null) {
       plugin.getNewHologramManager().deleteHologram(corpse.getHologram());
     }
-    CorpseAPI.getInstance().removeCorpse(corpse.getCorpseData());
-    corpses.remove(corpse.getCorpseData().getId());
+    for (Player p : Bukkit.getOnlinePlayers()) {
+      corpse.destroy(p);
+    }
+    corpses.remove(corpse.getId());
   }
 
   public void removeCorpses(Arena arena) {
@@ -104,43 +83,62 @@ public class CorpseHandler implements Listener {
   }
 
   private Hologram getLastWordsHologram(Player player) {
-    if (plugin.getLastWordsManager().hasLastWords(player)) {
-      return plugin.getNewHologramManager().createHologram(
-          player.getLocation().add(0, 1, 0),
-          java.util.Collections.singletonList(
-              new MessageBuilder(
-                  plugin.getLanguageManager().getLanguageMessage("In-Game.Messages.Arena.Playing.Last-Words.Hologram"))
-                  .value(plugily.projects.murdermystery.utils.MessageUtil
-                      .parseToLegacy(plugin.getLastWordsManager().getLastWords(player)))
-                  .build()));
+    if (plugin.getLastWordsManager().getLastWords(player) == null) {
+      return null;
     }
-    return null;
+    List<String> lines = new ArrayList<>();
+    lines.add(new MessageBuilder("ingame.corpses.last-words-hologram-header").asKey().build());
+
+    String line = new MessageBuilder("ingame.corpses.last-words-hologram-line").asKey().build();
+    line = line.replace("%last_words%", plugin.getLastWordsManager().getLastWords(player));
+    lines.add(line);
+
+    return plugin.getNewHologramManager().createHologram(player.getLocation().clone().add(0, 1, 0), lines);
   }
 
-  @EventHandler
-  public void onCorpseInteract(AsyncCorpseInteractEvent e) {
-    Bukkit.getScheduler().runTask(plugin, () -> {
-      Player player = e.getPlayer();
-      if (!plugin.getArenaRegistry().isInArena(player)) {
-        return;
+  @org.bukkit.event.EventHandler
+  public void onCorpseInteract(org.bukkit.event.player.PlayerInteractEntityEvent event) {
+    if (!(event.getRightClicked() instanceof org.bukkit.entity.Interaction)) {
+      return;
+    }
+
+    org.bukkit.entity.Interaction interaction = (org.bukkit.entity.Interaction) event.getRightClicked();
+    Corpse targetCorpse = null;
+
+    for (Corpse corpse : corpses.values()) {
+      if (corpse.getInteraction() != null && corpse.getInteraction().equals(interaction)) {
+        targetCorpse = corpse;
+        break;
       }
-      Arena arena = (Arena) plugin.getArenaRegistry().getArena(player);
-      if (arena.getArenaState() != IArenaState.IN_GAME) {
-        return;
-      }
-      if (arena.isSpectatorPlayer(player) || arena.isDeathPlayer(player)) {
-        return;
-      }
-      if (Role.isRole(Role.DETECTIVE, plugin.getUserManager().getUser(player), arena)) {
-        new MessageBuilder("IN_GAME_MESSAGES_ARENA_PLAYING_CORPSE_CLICK_DETECTIVE").asKey().player(player).arena(arena)
-            .sendPlayer();
-      } else if (Role.isRole(Role.MURDERER, plugin.getUserManager().getUser(player), arena)) {
-        new MessageBuilder("IN_GAME_MESSAGES_ARENA_PLAYING_CORPSE_CLICK_MURDERER").asKey().player(player).arena(arena)
-            .sendPlayer();
-      } else {
-        new MessageBuilder("IN_GAME_MESSAGES_ARENA_PLAYING_CORPSE_CLICK_INNOCENT").asKey().player(player).arena(arena)
-            .sendPlayer();
-      }
-    });
+    }
+
+    if (targetCorpse == null)
+      return;
+
+    Player player = event.getPlayer();
+    if (!plugin.getArenaRegistry().isInArena(player)) {
+      return;
+    }
+    Arena arena = (Arena) plugin.getArenaRegistry().getArena(player);
+    if (arena.getArenaState() != plugily.projects.minigamesbox.api.arena.IArenaState.IN_GAME) {
+      return;
+    }
+    if (arena.isSpectatorPlayer(player) || arena.isDeathPlayer(player)) {
+      return;
+    }
+
+    plugily.projects.minigamesbox.api.user.IUser user = plugin.getUserManager().getUser(player);
+    if (plugily.projects.murdermystery.arena.role.Role.isRole(plugily.projects.murdermystery.arena.role.Role.DETECTIVE,
+        user, arena)) {
+      new MessageBuilder("IN_GAME_MESSAGES_ARENA_PLAYING_CORPSE_CLICK_DETECTIVE").asKey().player(player).arena(arena)
+          .sendPlayer();
+    } else if (plugily.projects.murdermystery.arena.role.Role
+        .isRole(plugily.projects.murdermystery.arena.role.Role.MURDERER, user, arena)) {
+      new MessageBuilder("IN_GAME_MESSAGES_ARENA_PLAYING_CORPSE_CLICK_MURDERER").asKey().player(player).arena(arena)
+          .sendPlayer();
+    } else {
+      new MessageBuilder("IN_GAME_MESSAGES_ARENA_PLAYING_CORPSE_CLICK_INNOCENT").asKey().player(player).arena(arena)
+          .sendPlayer();
+    }
   }
 }

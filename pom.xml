@@ -89,13 +89,6 @@
             <optional>true</optional>
         </dependency>
         <dependency>
-            <groupId>com.github.unldenis.corpse</groupId>
-            <artifactId>Corpse</artifactId>
-            <version>2.0.0</version>
-            <scope>system</scope>
-            <systemPath>${project.basedir}/lib/Corpse-2.0.0.jar</systemPath>
-        </dependency>
-        <dependency>
             <groupId>net.kyori</groupId>
             <artifactId>adventure-text-minimessage</artifactId>
             <version>4.17.0</version>
