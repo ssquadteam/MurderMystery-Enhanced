@@ -83,14 +83,15 @@ public class CorpseHandler implements Listener {
   }
 
   private Hologram getLastWordsHologram(Player player) {
-    if (plugin.getLastWordsManager().getLastWords(player) == null) {
+    String lastWords = plugin.getLastWordsManager().getLastWords(player);
+    if (lastWords == null) {
       return null;
     }
     List<String> lines = new ArrayList<>();
     lines.add(new MessageBuilder("ingame.corpses.last-words-hologram-header").asKey().build());
 
     String line = new MessageBuilder("ingame.corpses.last-words-hologram-line").asKey().build();
-    line = line.replace("%last_words%", plugin.getLastWordsManager().getLastWords(player));
+    line = line.replace("%last_words%", lastWords);
     lines.add(line);
 
     return plugin.getNewHologramManager().createHologram(player.getLocation().clone().add(0, 1, 0), lines);

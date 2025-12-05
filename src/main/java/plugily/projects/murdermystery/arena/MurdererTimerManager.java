@@ -5,6 +5,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scheduler.BukkitTask;
 import plugily.projects.minigamesbox.api.user.IUser;
+import plugily.projects.minigamesbox.classic.utils.version.xseries.XPotion;
 import plugily.projects.minigamesbox.classic.utils.version.xseries.XSound;
 import plugily.projects.murdermystery.Main;
 
@@ -21,8 +22,12 @@ public final class MurdererTimerManager {
   private static final Map<UUID, BukkitTask> playerTimers = new ConcurrentHashMap<>();
   private static int rampageSeconds;
   private static int cooldownSeconds;
+  private static boolean speedBoostEnabled;
+  private static int speedBoostLevel;
+  private static int speedBoostDuration;
 
-  private MurdererTimerManager() {}
+  private MurdererTimerManager() {
+  }
 
   public static void init(Main mainPlugin) {
     plugin = mainPlugin;
@@ -30,13 +35,18 @@ public final class MurdererTimerManager {
   }
 
   public static void refreshConfigValues() {
-    if (plugin == null) return;
+    if (plugin == null)
+      return;
     rampageSeconds = plugin.getConfig().getInt("Murderer.Rampage-Seconds", 10);
     cooldownSeconds = plugin.getConfig().getInt("Murderer.Cooldown-Seconds", 30);
+    speedBoostEnabled = plugin.getConfig().getBoolean("Murderer.Kill-Speed-Boost.Enabled", true);
+    speedBoostLevel = plugin.getConfig().getInt("Murderer.Kill-Speed-Boost.Level", 2);
+    speedBoostDuration = plugin.getConfig().getInt("Murderer.Kill-Speed-Boost.Duration", 5);
   }
 
   /**
-   * Start or refresh the rampage timer for a murderer. When rampage ends, starts cooldown.
+   * Start or refresh the rampage timer for a murderer. When rampage ends, starts
+   * cooldown.
    */
   public static void startOrRefreshRampage(Player murderer) {
     if (plugin == null || murderer == null) {
@@ -45,9 +55,22 @@ public final class MurdererTimerManager {
 
     refreshConfigValues();
 
-    // Set/refresh rampage cooldown counter in user storage (decremented by core each second)
+    // Set/refresh rampage cooldown counter in user storage (decremented by core
+    // each second)
     IUser user = plugin.getUserManager().getUser(murderer);
     user.setCooldown("murderer_rampage", rampageSeconds);
+
+    // Apply speed boost if enabled
+    if (speedBoostEnabled && speedBoostLevel > 0 && speedBoostDuration > 0) {
+      try {
+        // Remove any existing speed effect first to avoid stacking
+        murderer.removePotionEffect(org.bukkit.potion.PotionEffectType.SPEED);
+        // Apply speed boost (amplifier is level - 1, so level 2 = Speed II)
+        XPotion.SPEED.buildPotionEffect(speedBoostDuration * 20, speedBoostLevel - 1).apply(murderer);
+      } catch (Throwable ignored) {
+        // Ignore if potion application fails
+      }
+    }
 
     // ensure any old timer is cancelled, then start a new one
     cancelTimer(murderer.getUniqueId());
@@ -72,7 +95,8 @@ public final class MurdererTimerManager {
           return;
         }
 
-        int remaining = (int) Math.ceil(loopUser.getCooldown(inRampagePhase ? "murderer_rampage" : "murderer_cooldown"));
+        int remaining = (int) Math
+            .ceil(loopUser.getCooldown(inRampagePhase ? "murderer_rampage" : "murderer_cooldown"));
         int total = inRampagePhase ? rampageSeconds : cooldownSeconds;
 
         // Update XP bar gradually (decreasing)
@@ -111,7 +135,8 @@ public final class MurdererTimerManager {
   }
 
   public static void cancelFor(Player player) {
-    if (player == null) return;
+    if (player == null)
+      return;
     cancelTimer(player.getUniqueId());
     resetExpBarSafe(player);
   }

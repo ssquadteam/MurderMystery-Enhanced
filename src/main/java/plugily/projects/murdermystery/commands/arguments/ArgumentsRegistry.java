@@ -23,22 +23,24 @@ import plugily.projects.murdermystery.Main;
 import plugily.projects.murdermystery.commands.arguments.admin.RolePassArgument;
 import plugily.projects.murdermystery.commands.arguments.admin.arena.SpecialBlockRemoverArgument;
 import plugily.projects.murdermystery.commands.arguments.game.RoleSelectorArgument;
+import plugily.projects.murdermystery.commands.arguments.game.SkinSelectorGUIArgument;
 import plugily.projects.murdermystery.commands.arguments.game.SwordSkinsArgument;
 
 /**
  * @author Plajer
- * <p>
- * Created at 11.01.2019
+ *         <p>
+ *         Created at 11.01.2019
  */
 public class ArgumentsRegistry extends PluginArgumentsRegistry {
 
   public ArgumentsRegistry(Main plugin) {
     super(plugin);
-    //register basic arugments
+    // register basic arugments
     new RoleSelectorArgument(this);
     new SwordSkinsArgument(this);
+    new SkinSelectorGUIArgument(this);
 
-    //register admin related arguments
+    // register admin related arguments
     new SpecialBlockRemoverArgument(this);
     new RolePassArgument(this);
   }

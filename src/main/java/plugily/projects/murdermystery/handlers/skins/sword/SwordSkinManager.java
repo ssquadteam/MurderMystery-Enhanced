@@ -35,7 +35,8 @@ import java.util.stream.Collectors;
 
 /**
  * @author 2Wild4You, Tigerpanzer_02
- *     <p>Created at 19.02.2021
+ *         <p>
+ *         Created at 19.02.2021
  */
 public class SwordSkinManager {
 
@@ -56,10 +57,10 @@ public class SwordSkinManager {
     String path = "Skins.Sword.";
     for (String id : section.getKeys(false)) {
       SwordSkin skin = new SwordSkin(
-              XMaterial.matchXMaterial(config.getString(path + id + ".Material", "BEDROCK"))
-                  .orElse(XMaterial.BEDROCK)
-                  .parseItem(),
-              config.getString(path + id + ".Permission", ""));
+          XMaterial.matchXMaterial(config.getString(path + id + ".Material", "BEDROCK"))
+              .orElse(XMaterial.BEDROCK)
+              .parseItem(),
+          config.getString(path + id + ".Permission", ""));
       addSwordSkin(skin);
       // 将皮肤名称映射到皮肤对象
       skinsByName.put(id, skin);
@@ -78,24 +79,20 @@ public class SwordSkinManager {
 
   public ItemStack getRandomSwordSkin(Player player) {
     // check perms
-    List<SwordSkin> perms =
-        registeredSwordSkins.stream()
-            .filter(swordSkin -> player.hasPermission(swordSkin.getPermission()))
-            .collect(Collectors.toList());
+    List<SwordSkin> perms = registeredSwordSkins.stream()
+        .filter(swordSkin -> player.hasPermission(swordSkin.getPermission()))
+        .collect(Collectors.toList());
     if (!perms.isEmpty()) {
-      ItemStack itemStack =
-          perms.get(ThreadLocalRandom.current().nextInt(perms.size())).getItemStack();
+      ItemStack itemStack = perms.get(ThreadLocalRandom.current().nextInt(perms.size())).getItemStack();
       murdererSwords.put(player, itemStack);
       return itemStack;
     }
     // check default
-    List<SwordSkin> noPerms =
-        registeredSwordSkins.stream()
-            .filter(swordSkin -> !swordSkin.hasPermission())
-            .collect(Collectors.toList());
+    List<SwordSkin> noPerms = registeredSwordSkins.stream()
+        .filter(swordSkin -> !swordSkin.hasPermission())
+        .collect(Collectors.toList());
     if (!noPerms.isEmpty()) {
-      ItemStack itemStack =
-          noPerms.get(ThreadLocalRandom.current().nextInt(noPerms.size())).getItemStack();
+      ItemStack itemStack = noPerms.get(ThreadLocalRandom.current().nextInt(noPerms.size())).getItemStack();
       murdererSwords.put(player, itemStack);
       return itemStack;
     }
@@ -121,11 +118,18 @@ public class SwordSkinManager {
   }
 
   /**
+   * 获取所有皮肤名称和皮肤对象的映射
+   */
+  public Map<String, SwordSkin> getSkinsByName() {
+    return skinsByName;
+  }
+
+  /**
    * 根据ItemStack获取皮肤名称
    */
   public String getSkinNameByItemStack(ItemStack itemStack) {
-    for(Map.Entry<String, SwordSkin> entry : skinsByName.entrySet()) {
-      if(entry.getValue().getItemStack().getType() == itemStack.getType()) {
+    for (Map.Entry<String, SwordSkin> entry : skinsByName.entrySet()) {
+      if (entry.getValue().getItemStack().getType() == itemStack.getType()) {
         return entry.getKey();
       }
     }
@@ -140,11 +144,11 @@ public class SwordSkinManager {
     String selectedSkinName = getPlayerSelectedSkinName(player);
 
     // 如果玩家选择了皮肤
-    if(selectedSkinName != null && !selectedSkinName.isEmpty() && !selectedSkinName.equals("0")) {
+    if (selectedSkinName != null && !selectedSkinName.isEmpty() && !selectedSkinName.equals("0")) {
       SwordSkin selectedSkin = getSkinByName(selectedSkinName);
-      if(selectedSkin != null) {
+      if (selectedSkin != null) {
         // 检查权限
-        if(!selectedSkin.hasPermission() || player.hasPermission(selectedSkin.getPermission())) {
+        if (!selectedSkin.hasPermission() || player.hasPermission(selectedSkin.getPermission())) {
           ItemStack itemStack = selectedSkin.getItemStack();
           murdererSwords.put(player, itemStack);
           return itemStack;
@@ -163,10 +167,10 @@ public class SwordSkinManager {
     String selectedSkinName = getPlayerSelectedSkinName(player);
 
     // 如果玩家选择了皮肤且有权限使用
-    if(selectedSkinName != null && !selectedSkinName.isEmpty() && !selectedSkinName.equals("0")) {
+    if (selectedSkinName != null && !selectedSkinName.isEmpty() && !selectedSkinName.equals("0")) {
       SwordSkin selectedSkin = getSkinByName(selectedSkinName);
-      if(selectedSkin != null) {
-        if(!selectedSkin.hasPermission() || player.hasPermission(selectedSkin.getPermission())) {
+      if (selectedSkin != null) {
+        if (!selectedSkin.hasPermission() || player.hasPermission(selectedSkin.getPermission())) {
           return selectedSkinName;
         }
       }
@@ -184,7 +188,7 @@ public class SwordSkinManager {
     int skinHash = user.getStatistic("SELECTED_SWORD_SKIN");
 
     // 如果哈希码为0，表示没有选择皮肤
-    if(skinHash == 0) {
+    if (skinHash == 0) {
       return "default";
     }
 

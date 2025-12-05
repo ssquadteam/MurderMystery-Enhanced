@@ -31,8 +31,8 @@ import java.util.concurrent.ThreadLocalRandom;
 
 /**
  * @author Plajer
- * <p>
- * Created at 15.10.2018
+ *         <p>
+ *         Created at 15.10.2018
  */
 public class MysteryPotionRegistry {
 
@@ -40,21 +40,47 @@ public class MysteryPotionRegistry {
 
   public static void init(Main plugin) {
     FileConfiguration config = ConfigUtils.getConfig(plugin, "special_blocks");
-    org.bukkit.configuration.ConfigurationSection section = config.getConfigurationSection("Special-Blocks.Cauldron-Potions");
-    if(section == null) {
+    org.bukkit.configuration.ConfigurationSection section = config
+        .getConfigurationSection("Special-Blocks.Cauldron-Potions");
+    if (section == null) {
+      plugin.getDebugger().debug("No Cauldron-Potions section found in special_blocks.yml");
       return;
     }
 
-    for(String key : section.getKeys(false)) {
+    for (String key : section.getKeys(false)) {
+      try {
+        String potionType = section.getString(key + ".Type", "").toUpperCase();
+        if (potionType.isEmpty()) {
+          plugin.getDebugger().debug("Mystery potion {0} has no Type defined, skipping", key);
+          continue;
+        }
 
+        java.util.Optional<XPotion> xPotion = XPotion.of(potionType);
+        if (!xPotion.isPresent()) {
+          plugin.getDebugger().debug("Invalid potion type: {0} for mystery potion {1}", potionType, key);
+          continue;
+        }
 
-      mysteryPotions.add(new MysteryPotion(new MessageBuilder(section.getString(key + ".Name")).build(),
-          new MessageBuilder(section.getString(key + ".Subtitle")).build(), XPotion.of(section.getString(key + ".Type", "").toUpperCase()).get().buildPotionEffect(section.getInt(key + ".Duration") * 20, section.getInt(key + ".Amplifier"))));
+        String name = section.getString(key + ".Name", "Mystery Potion");
+        String subtitle = section.getString(key + ".Subtitle", "");
+        int duration = section.getInt(key + ".Duration", 10);
+        int amplifier = section.getInt(key + ".Amplifier", 1);
+
+        mysteryPotions.add(new MysteryPotion(
+            new MessageBuilder(name).build(),
+            new MessageBuilder(subtitle).build(),
+            xPotion.get().buildPotionEffect(duration * 20, amplifier)));
+        plugin.getDebugger().debug("Loaded mystery potion: {0} ({1})", key, potionType);
+      } catch (Exception e) {
+        plugin.getDebugger().debug("Failed to load mystery potion {0}: {1}", key, e.getMessage());
+      }
     }
+    plugin.getDebugger().debug("Loaded {0} mystery potions total", mysteryPotions.size());
   }
 
   public static MysteryPotion getRandomPotion() {
-    return mysteryPotions.get(mysteryPotions.size() == 1 ? 0 : ThreadLocalRandom.current().nextInt(mysteryPotions.size()));
+    return mysteryPotions
+        .get(mysteryPotions.size() == 1 ? 0 : ThreadLocalRandom.current().nextInt(mysteryPotions.size()));
   }
 
   public static List<MysteryPotion> getMysteryPotions() {

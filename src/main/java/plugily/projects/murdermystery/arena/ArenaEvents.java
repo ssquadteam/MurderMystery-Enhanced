@@ -245,8 +245,17 @@ public class ArenaEvents extends PluginArenaEvents {
     plugin.getRewardsHandler().performReward(player, plugin.getRewardsHandler().getRewardType("GOLD_PICKUP"));
 
     if (Role.isRole(Role.ANY_DETECTIVE, user, arena)) {
-      ItemPosition.addItem(user, ItemPosition.ARROWS, new ItemStack(Material.ARROW,
-          e.getItem().getItemStack().getAmount() * plugin.getConfig().getInt("Bow.Amount.Arrows.Detective", 3)));
+      // Calculate arrows based on gold collected using config values
+      int goldPerArrow = plugin.getConfig().getInt("Gold.Amount.Gold-Per-Arrow", 1);
+      int arrowsPerGold = plugin.getConfig().getInt("Gold.Amount.Arrows-Per-Gold", 1);
+      int goldAmount = e.getItem().getItemStack().getAmount();
+
+      // Calculate arrows to give: (gold amount / gold needed per threshold) * arrows
+      // per threshold
+      int arrowsToGive = goldPerArrow > 0 ? (goldAmount / goldPerArrow) * arrowsPerGold : goldAmount;
+      if (arrowsToGive > 0) {
+        ItemPosition.addItem(user, ItemPosition.ARROWS, new ItemStack(Material.ARROW, arrowsToGive));
+      }
       return;
     }
 

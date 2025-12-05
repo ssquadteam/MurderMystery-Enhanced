@@ -235,6 +235,10 @@ Gold:
     Arrows: 3
     #How much arrows should a player with bow gets when he pick up a gold ingot?
     Pick-Up: 1
+    # How much gold does the detective need to collect to receive additional arrows?
+    Gold-Per-Arrow: 1
+    # How many arrows does the detective receive per gold threshold?
+    Arrows-Per-Gold: 1
 
 
 Bow:
@@ -273,6 +277,14 @@ Murderer:
   Rampage-Seconds: 10
   # Seconds the Murderer cannot attack after rampage ends (global cooldown)
   Cooldown-Seconds: 30
+  # Speed boost when murderer kills a player
+  Kill-Speed-Boost:
+    # Should murderer get a speed boost after killing a player?
+    Enabled: true
+    # Speed level (1-10, like potion amplifier where 1 = Speed I, 2 = Speed II)
+    Level: 2
+    # Duration in seconds
+    Duration: 5
 
 
 Sword:
